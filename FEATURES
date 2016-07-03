@@ -1,0 +1,11 @@
+
+Features:
+------------
+
+sip2rtsp has support for:
+ * SIP UAS
+ * RTSP client
+ * RTP Proxy(audio and video)
+ * symmetricRTP
+ * ...
+

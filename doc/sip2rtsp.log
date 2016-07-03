@@ -1,0 +1,220 @@
+
+Signal:
+SIP(192.168.9.133:5060) <==>  SIP2RTSP(192.168.1.202:5064-192.168.1.202:60224) <==>  RTSP(192.168.1.232:554)
+
+
+1. -->SIP recv
+INVITE sip:118@192.168.1.202:5064;line=32cc767f8b99d30 SIP/2.0
+Record-Route: <sip:192.168.9.133:5060;lr=on>
+Via: SIP/2.0/UDP 192.168.9.133;branch=z9hG4bK01db.fd938fc7.0
+Via: SIP/2.0/UDP 120.101.61.20:5065;received=120.101.61.20;rport=5065;branch=z9hG4bK5703
+From: <sip:790@gehoo.cn>;tag=2353
+To: <sip:118@gehoo.cn>
+Call-ID: 3046
+CSeq: 21 INVITE
+Contact: <sip:toto@120.101.61.20:5065>
+Content-Type: application/sdp
+Allow: INVITE, ACK, CANCEL, OPTIONS, BYE, REFER, NOTIFY, MESSAGE, SUBSCRIBE, INFO
+Max-Forwards: 69
+User-Agent: Linphone/3.5.0 (eXosip2/3.6.0)
+Subject: Phone call
+Content-Length: 315
+
+v=0
+o=790 1814 1814 IN IP4 192.168.9.133
+s=Talk
+c=IN IP4 192.168.9.133
+t=0 0
+m=audio 52850 RTP/AVP 0 8 101
+a=rtpmap:0 PCMU/8000
+a=rtpmap:8 PCMA/8000
+a=rtpmap:101 telephone-event/8000
+a=fmtp:101 0-11
+m=video 35170 RTP/AVP 102
+a=rtpmap:102 H264/90000
+a=fmtp:102 profile-level-id=428014
+a=nortpproxy:yes
+
+2. <--SIP send
+SIP/2.0 100 Trying
+Via: SIP/2.0/UDP 192.168.9.133;branch=z9hG4bK01db.fd938fc7.0
+Via: SIP/2.0/UDP 120.101.61.20:5065;received=120.101.61.20;rport=5065;branch=z9hG4bK5703
+From: <sip:790@gehoo.cn>;tag=2353
+To: <sip:118@gehoo.cn>
+Call-ID: 3046
+CSeq: 21 INVITE
+User-Agent: sip2rtsp v1.0
+Content-Length: 0
+
+3. RTSP send-->
+DESCRIBE rtsp://admin:admin12345@192.168.1.232:554/h264/ch1/main/av_stream RTSP/1.0
+CSeq: 1
+User-Agent: Sip2Rtsp 1.0
+
+4. RTSP recv<--
+RTSP/1.0 200 OK
+CSeq: 1
+Content-Type: application/sdp
+Content-Base: rtsp://admin:admin12345@192.168.1.232:554/h264/ch1/main/av_stream/
+Content-Length: 797
+
+v=0
+o=- 1466677521461366 1466677521461366 IN IP4 192.168.1.232
+s=Media Presentation
+e=NONE
+b=AS:5100
+t=0 0
+a=control:rtsp://admin:admin12345@192.168.1.232:554/h264/ch1/main/av_stream/
+m=video 0 RTP/AVP 96
+c=IN IP4 0.0.0.0
+b=AS:5000
+a=recvonly
+a=x-dimensions:640,480
+a=control:rtsp://admin:admin12345@192.168.1.232:554/h264/ch1/main/av_stream/trackID=1
+a=rtpmap:96 H264/90000
+a=fmtp:96 profile-level-id=420029; packetization-mode=1; sprop-parameter-sets=Z00AHpWoKA9oQAABwgAAV+QB,aO48gA==
+m=audio 0 RTP/AVP 0
+c=IN IP4 0.0.0.0
+b=AS:50
+a=recvonly
+a=control:rtsp://admin:admin12345@192.168.1.232:554/h264/ch1/main/av_stream/trackID=2
+a=rtpmap:0 PCMU/8000
+a=Media_header:MEDIAINFO=494D4B48010100000400010010710110401F000000FA000000000000000000000000000000000000;
+a=appversion:1.0
+
+5. RTSP send-->
+SETUP rtsp://admin:admin12345@192.168.1.232:554/h264/ch1/main/av_stream/trackID=1 RTSP/1.0
+CSeq: 2
+Transport:  RTP/AVP;unicast;destination=192.168.1.202;client_port=9006-9007
+User-Agent: Sip2Rtsp 1.0
+
+6. RTSP recv<--
+RTSP/1.0 200 OK
+CSeq: 2
+Session:        835885166;timeout=60
+Transport: RTP/AVP;unicast;destination=192.168.1.202;client_port=9006-9007;server_port=8244-8245;ssrc=7256c4bb;mode="play"
+Date:  Thu, Jun 23 2016 10:25:21 GMT
+
+7. RTSP send-->
+SETUP rtsp://admin:admin12345@192.168.1.232:554/h264/ch1/main/av_stream/trackID=2 RTSP/1.0
+CSeq: 3
+Session: 835885166
+Transport:  RTP/AVP;unicast;destination=192.168.1.202;client_port=9002-9003
+User-Agent: Sip2Rtsp 1.0
+
+8. RTSP recv<--
+RTSP/1.0 200 OK
+CSeq: 3
+Session:        835885166;timeout=60
+Transport: RTP/AVP;unicast;destination=192.168.1.202;client_port=9002-9003;server_port=8246-8247;ssrc=5c0ef790;mode="play"
+Date:  Thu, Jun 23 2016 10:25:21 GMT
+
+9. <--SIP send
+SIP/2.0 200 OK
+Via: SIP/2.0/UDP 192.168.9.133;branch=z9hG4bK01db.fd938fc7.0
+Via: SIP/2.0/UDP 120.101.61.20:5065;received=120.101.61.20;rport=5065;branch=z9hG4bK5703
+Record-Route: <sip:192.168.9.133:5060;lr=on>
+From: <sip:790@gehoo.cn>;tag=2353
+To: <sip:118@gehoo.cn>;tag=275216232
+Call-ID: 3046
+CSeq: 21 INVITE
+Contact: <sip:118@192.168.1.202:5064>
+Content-Type: application/sdp
+User-Agent: sip2rtsp v1.0
+Content-Length:   818
+
+v=0
+o=- 1466677521461366 1466677521461366 IN IP4 192.168.1.232
+s=Media Presentation
+e=NONE
+b=AS:5100
+t=0 0
+a=control:rtsp://admin:admin12345@192.168.1.232:554/h264/ch1/main/av_stream/
+m=audio 9000 RTP/AVP 0
+c=IN IP4 192.168.1.202
+b=AS:50
+a=recvonly
+a=control:rtsp://admin:admin12345@192.168.1.232:554/h264/ch1/main/av_stream/trackID=2
+a=rtpmap:0 PCMU/8000
+a=Media_header:MEDIAINFO=494D4B48010100000400010010710110401F000000FA000000000000000000000000000000000000;
+a=appversion:1.0
+m=video 9004 RTP/AVP 102
+c=IN IP4 192.168.1.202
+b=AS:5000
+a=recvonly
+a=x-dimensions:640,480
+a=control:rtsp://admin:admin12345@192.168.1.232:554/h264/ch1/main/av_stream/trackID=1
+a=rtpmap:102 H264/90000
+a=fmtp:102 profile-level-id=420029; packetization-mode=1; sprop-parameter-sets=Z00AHpWoKA9oQAABwgAAV+QB,aO48gA==
+
+10. RTSP send-->
+PLAY rtsp://admin:admin12345@192.168.1.232:554/h264/ch1/main/av_stream RTSP/1.0
+CSeq: 4
+Range: npt=0.0-
+Session: 835885166
+User-Agent: Sip2Rtsp 1.0
+
+11. RTSP recv<--
+RTSP/1.0 200 OK
+CSeq: 4
+Session:        835885166
+RTP-Info: url=rtsp://admin:admin12345@192.168.1.232:554/h264/ch1/main/av_stream/trackID=1;seq=41254;rtptime=135546416,url=rtsp://admin:admin12345@192.168.1.232:554/h264/ch1/main/av_stream/trackID=2;seq=47916;rtptime=12048816
+Date:  Thu, Jun 23 2016 10:25:21 GMT
+
+12. -->SIP recv
+ACK sip:118@192.168.1.202:5064 SIP/2.0
+Via: SIP/2.0/UDP 192.168.9.133;branch=z9hG4bK01db.fd938fc7.2
+Via: SIP/2.0/UDP 120.101.61.20:5065;received=120.101.61.20;rport=5065;branch=z9hG4bK22733
+From: <sip:790@gehoo.cn>;tag=2353
+To: <sip:118@gehoo.cn>;tag=275216232
+Call-ID: 3046
+CSeq: 21 ACK
+Contact: <sip:toto@120.101.61.20:5065>
+Proxy-Authorization: Digest username="790", realm="gehoo.cn", nonce="576d5ad50000075b301d1c873b25e6fe13ee15ea52b92470", uri="sip:118@gehoo.cn", response="9dafe176fdb8e1658e98cbf376026935", algorithm=MD5
+Max-Forwards: 69
+User-Agent: Linphone/3.5.0 (eXosip2/3.6.0)
+Content-Length: 0
+
+
+13. RTP transfer
+audio: 192.168.9.133:52850 <==> 192.168.1.202:9000-192.168.1.202:9002 <==> 192.168.1.232:8246
+video: 192.168.9.133:35170 <==> 192.168.1.202:9004-192.168.1.202:9006 <==> 192.168.1.232:8244
+
+
+14. -->SIP recv
+BYE sip:118@192.168.1.202:5064 SIP/2.0
+Via: SIP/2.0/UDP 192.168.9.133;branch=z9hG4bKd0db.70628f52.0
+Via: SIP/2.0/UDP 120.101.61.20:5065;received=120.101.61.20;rport=5065;branch=z9hG4bK10734
+From: <sip:790@gehoo.cn>;tag=2353
+To: <sip:118@gehoo.cn>;tag=275216232
+Call-ID: 3046
+CSeq: 22 BYE
+Contact: <sip:790@120.101.61.20:5065>
+Proxy-Authorization: Digest username="790", realm="gehoo.cn", nonce="576d5ad50000075b301d1c873b25e6fe13ee15ea52b92470", uri="sip:118@120.101.61.20:5064", response="2e6c419bf01314b86e37ffaf802cc02e", algorithm=MD5
+Max-Forwards: 69
+User-Agent: Linphone/3.5.0 (eXosip2/3.6.0)
+Content-Length: 0
+
+15. <--SIP send
+SIP/2.0 200 OK
+Via: SIP/2.0/UDP 192.168.9.133;branch=z9hG4bKd0db.70628f52.0
+Via: SIP/2.0/UDP 120.101.61.20:5065;received=120.101.61.20;rport=5065;branch=z9hG4bK10734
+From: <sip:790@gehoo.cn>;tag=2353
+To: <sip:118@gehoo.cn>;tag=275216232
+Call-ID: 3046
+CSeq: 22 BYE
+User-Agent: sip2rtsp v1.0
+Content-Length: 0
+
+16. RTSP send-->
+TEARDOWN rtsp://admin:admin12345@192.168.1.232:554/h264/ch1/main/av_stream RTSP/1.0
+CSeq: 5
+Session: 835885166
+User-Agent: Sip2Rtsp 1.0
+
+17. RTSP recv<--
+RTSP/1.0 200 OK
+CSeq: 5
+Session:        835885166
+Date:  Thu, Jun 23 2016 10:25:27 GMT
+

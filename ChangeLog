@@ -1,0 +1,6 @@
+sip2rtsp (1.0.0)
+	* SIP UAS
+	* RTSP client
+	* RTP Proxy(audio and video)
+	* symmetricRTP 
+	 

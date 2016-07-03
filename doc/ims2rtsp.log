@@ -1,0 +1,377 @@
+
+Signal:
+IMS(210.76.104.51:5060) <==>  SIP2RTSP(192.168.1.202) <==>  RTSP(192.168.1.202:554)
+
+
+1.<--SIP send
+REGISTER sip:ims1.sip.uniza.sk SIP/2.0
+Via: SIP/2.0/UDP 192.168.1.202:38814;rport;branch=z9hG4bK2113850771
+From: <sip:10001@ims1.sip.uniza.sk:5060>;tag=1341688690
+To: <sip:10001@ims1.sip.uniza.sk:5060>
+Call-ID: 1453673684
+CSeq: 1 REGISTER
+Contact: <sip:10001@192.168.1.202:38814;line=993a7f059d8c324>
+Max-Forwards: 70
+User-Agent: sip2rtsp v1.0
+Expires: 7200
+Content-Length: 0
+
+2.-->SIP recv
+SIP/2.0 100 Trying
+Via: SIP/2.0/UDP 192.168.1.202:38814;rport=38814;branch=z9hG4bK2113850771;received=192.168.1.202
+From: <sip:10001@ims1.sip.uniza.sk:5060>;tag=1341688690
+To: <sip:10001@ims1.sip.uniza.sk:5060>
+Call-ID: 1453673684
+CSeq: 1 REGISTER
+Server: Kamailio P-CSCF
+Content-Length: 0
+
+3.-->SIP recv
+SIP/2.0 401 Unauthorized - Challenging the UE
+Via: SIP/2.0/UDP 192.168.1.202:38814;received=192.168.1.202;rport=38814;branch=z9hG4bK2113850771
+From: <sip:10001@ims1.sip.uniza.sk:5060>;tag=1341688690
+To: <sip:10001@ims1.sip.uniza.sk:5060>;tag=108b55f0c8e6982cc2e319f3e90f669d-d688
+Call-ID: 1453673684
+CSeq: 1 REGISTER
+WWW-Authenticate: Digest realm="ims1.sip.uniza.sk", nonce="7a1cbaf1e64f59c97806ce169df46208", algorithm=MD5, qop="auth,auth-int"
+Path: <sip:term@pcscf.ims1.sip.uniza.sk:5060;nat=yes;received=sip:122.101.71.11:38814;lr>
+Server: Kamailio S-CSCF
+Content-Length: 0
+Warning: 392 210.76.104.53:5060 "Noisy feedback tells:  pid=15530 req_src_ip=210.76.104.52 req_src_port=5060 in_uri=sip:scscf.ims1.sip.uniza.sk:5060 out_uri=sip:scscf.ims1.sip.uniza.sk:5060 via_cnt==1"
+
+4.<--SIP send
+REGISTER sip:ims1.sip.uniza.sk SIP/2.0
+Via: SIP/2.0/UDP 192.168.1.202:38814;rport;branch=z9hG4bK841306026
+From: <sip:10001@ims1.sip.uniza.sk:5060>;tag=1341688690
+To: <sip:10001@ims1.sip.uniza.sk:5060>
+Call-ID: 1453673684
+CSeq: 2 REGISTER
+Contact: <sip:10001@192.168.1.202:38814;line=993a7f059d8c324>
+Authorization: Digest username="10001@ims1.sip.uniza.sk", realm="ims1.sip.uniza.sk", nonce="7a1cbaf1e64f59c97806ce169df46208", uri="sip:ims1.sip.uniza.sk", response="529da49a05912c873b62e9898ea5f6a9", algorithm=MD5, cnonce="0a4f113b", qop=auth, nc=00000001
+Max-Forwards: 70
+User-Agent: sip2rtsp v1.0
+Expires: 7200
+Content-Length: 0
+
+5.-->SIP recv
+SIP/2.0 100 Trying
+Via: SIP/2.0/UDP 192.168.1.202:38814;rport=38814;branch=z9hG4bK841306026;received=192.168.1.202
+From: <sip:10001@ims1.sip.uniza.sk:5060>;tag=1341688690
+To: <sip:10001@ims1.sip.uniza.sk:5060>
+Call-ID: 1453673684
+CSeq: 2 REGISTER
+Server: Kamailio P-CSCF
+Content-Length: 0
+
+6.-->SIP recv
+SIP/2.0 200 OK
+Via: SIP/2.0/UDP 192.168.1.202:38814;received=192.168.1.202;rport=38814;branch=z9hG4bK841306026
+From: <sip:10001@ims1.sip.uniza.sk:5060>;tag=1341688690
+To: <sip:10001@ims1.sip.uniza.sk:5060>;tag=108b55f0c8e6982cc2e319f3e90f669d-ee92
+Call-ID: 1453673684
+CSeq: 2 REGISTER
+Authentication-Info: nextnonce="9422fd757232588f630733c8642c148f",qop=auth,rspauth="4d3102baa8541744ed3090866ae44d66",cnonce="0a4f113b",nc=00000001
+Contact: <sip:10001@192.168.1.202:38814;line=993a7f059d8c324>;expires=60
+Path: <sip:term@pcscf.ims1.sip.uniza.sk:5060;nat=yes;received=sip:122.101.71.11:38814;lr>
+P-Associated-URI: <sip:10001@ims1.sip.uniza.sk>
+Service-Route: <sip:orig@scscf.ims1.sip.uniza.sk:5060;lr>
+Server: Kamailio S-CSCF
+Content-Length: 0
+Warning: 392 210.76.104.53:5060 "Noisy feedback tells:  pid=15528 req_src_ip=210.76.104.52 req_src_port=5060 in_uri=sip:scscf.ims1.sip.uniza.sk:5060 out_uri=sip:scscf.ims1.sip.uniza.sk:5060 via_cnt==1"
+
+7.-->SIP recv
+INVITE sip:10001@192.168.1.202:41563;line=9d840e789d8d215 SIP/2.0
+Via: SIP/2.0/UDP 210.76.104.51;branch=z9hG4bK22d2.c8ffda7dc39f6bea40f1cbd65f8bd51a.0
+Via: SIP/2.0/UDP 210.76.104.53;rport=5060;branch=z9hG4bK22d2.5a738f526af0ecaeeab8f8334809b59c.0
+Via: SIP/2.0/UDP 210.76.104.52;branch=z9hG4bK22d2.439cf6e9c31a32f93ec60d766144f117.1
+Via: SIP/2.0/UDP 210.76.104.53;branch=z9hG4bK22d2.bbb10db3296ff10ccac2b132bf7e262c.0
+Via: SIP/2.0/UDP 210.76.104.51;branch=z9hG4bK22d2.78c296f29b53f3052026c599d12193b7.0
+Via: SIP/2.0/UDP 192.168.16.81:5061;received=192.168.16.81;rport=5061;branch=z9hG4bK10730
+Record-Route: <sip:mt@210.76.104.51;lr=on;ftag=7030;nat=yes;did=4a8.91f2>
+Record-Route: <sip:mt@210.76.104.53;lr=on;ftag=7030;did=4a8.7e5>
+Record-Route: <sip:mo@210.76.104.53;lr=on;ftag=7030;did=4a8.7e5>
+Record-Route: <sip:mo@210.76.104.51;lr=on;ftag=7030;nat=yes;did=4a8.81f2>
+From: <sip:10000@ims1.sip.uniza.sk>;tag=7030
+To: <sip:10001@ims1.sip.uniza.sk>
+Call-ID: 668
+CSeq: 20 INVITE
+Contact: <sip:10000@192.168.16.81:5061;alias=192.168.16.81~5061~1>
+Content-Type: application/sdp
+Allow: INVITE
+Allow: ACK
+Allow: CANCEL
+Allow: OPTIONS
+Allow: BYE
+Allow: REFER
+Allow: NOTIFY
+Allow: MESSAGE
+Allow: SUBSCRIBE
+Allow: INFO
+Max-forwards: 65
+User-agent: Linphone/3.5.0 (eXosip2/3.6.0)
+Subject: Phone call
+P-asserted-identity: <sip:10000@ims1.sip.uniza.sk>
+Content-Length:   351
+
+v=0
+o=10000 3571 3571 IN IP4 210.76.104.51
+s=Talk
+c=IN IP4 210.76.104.51
+t=0 0
+m=audio 32024 RTP/AVP 0 8 101
+a=rtpmap:0 PCMU/8000
+a=rtpmap:8 PCMA/8000
+a=rtpmap:101 telephone-event/8000
+a=fmtp:101 0-11
+a=sendrecv
+a=rtcp:32025
+m=video 32064 RTP/AVP 102
+a=rtpmap:102 H264/90000
+a=fmtp:102 profile-level-id=428014
+a=sendrecv
+a=rtcp:32065
+
+8.<--SIP send 
+SIP/2.0 100 Trying
+Via: SIP/2.0/UDP 210.76.104.51;branch=z9hG4bK22d2.c8ffda7dc39f6bea40f1cbd65f8bd51a.0
+Via: SIP/2.0/UDP 210.76.104.53;rport=5060;branch=z9hG4bK22d2.5a738f526af0ecaeeab8f8334809b59c.0
+Via: SIP/2.0/UDP 210.76.104.52;branch=z9hG4bK22d2.439cf6e9c31a32f93ec60d766144f117.1
+Via: SIP/2.0/UDP 210.76.104.53;branch=z9hG4bK22d2.bbb10db3296ff10ccac2b132bf7e262c.0
+Via: SIP/2.0/UDP 210.76.104.51;branch=z9hG4bK22d2.78c296f29b53f3052026c599d12193b7.0
+Via: SIP/2.0/UDP 192.168.16.81:5061;received=192.168.16.81;rport=5061;branch=z9hG4bK10730
+From: <sip:10000@ims1.sip.uniza.sk>;tag=7030
+To: <sip:10001@ims1.sip.uniza.sk>
+Call-ID: 668
+CSeq: 20 INVITE
+User-Agent: sip2rtsp v1.0
+Content-Length: 0
+
+
+9.RTSP send -->
+DESCRIBE rtsp://192.168.1.202/proxyStream RTSP/1.0
+CSeq: 1
+User-Agent: YinHe Ltd.co RTSP 1.0
+
+
+10.RTSP response <--
+RTSP/1.0 401 Unauthorized
+CSeq: 1
+Date: Fri, May 22 2015 04:57:33 GMT
+WWW-Authenticate: Digest realm="LIVE555 Streaming Media", nonce="8b7cf5a06398b99dc0d22971f6cd9436"
+
+
+11.RTSP send -->
+DESCRIBE rtsp://192.168.1.202/proxyStream RTSP/1.0
+CSeq: 2
+Authorization: Digest username="baustem", realm="LIVE555 Streaming Media",nonce="8b7cf5a06398b99dc0d22971f6cd9436",uri="rtsp://192.168.1.202/proxyStream", response="af9cdfdbeba7e8c416ba7258cb0802ad"
+User-Agent: YinHe Ltd.co RTSP 1.0
+
+
+12.RTSP response <--
+RTSP/1.0 200 OK
+CSeq: 2
+Date: Fri, May 22 2015 04:57:33 GMT
+Content-Base: rtsp://192.168.1.202/proxyStream/
+Content-Type: application/sdp
+Content-Length: 614
+
+v=0
+o=- 1432265961129685 1 IN IP4 192.168.1.202
+s=LIVE555 Streaming Media v2016.03.16
+i=LIVE555 Streaming Media v2016.03.16
+t=0 0
+a=tool:LIVE555 Streaming Media v2016.03.16
+a=type:broadcast
+a=control:*
+a=range:npt=0-
+a=x-qt-text-nam:LIVE555 Streaming Media v2016.03.16
+a=x-qt-text-inf:LIVE555 Streaming Media v2016.03.16
+m=video 0 RTP/AVP 96
+c=IN IP4 0.0.0.0
+b=AS:5000
+a=rtpmap:96 H264/90000
+a=fmtp:96 packetization-mode=1;profile-level-id=42001E;sprop-parameter-sets=Z0IAHpW4KA9k,aM48gA==
+a=control:track1
+m=audio 0 RTP/AVP 97
+c=IN IP4 0.0.0.0
+b=AS:50
+a=rtpmap:97 PCMU/8000
+a=control:track2
+
+13.RTSP send -->
+SETUP rtsp://192.168.1.202/proxyStream/track1 RTSP/1.0
+CSeq: 3
+Authorization: Digest username="baustem", realm="LIVE555 Streaming Media",nonce="8b7cf5a06398b99dc0d22971f6cd9436",uri="rtsp://192.168.1.202/proxyStream", response="b0ddb1adb656602f772feabb39deb045"
+Transport:  RTP/AVP;unicast;destination=210.76.104.51;client_port=32064-32065
+User-Agent: YinHe Ltd.co RTSP 1.0
+
+
+14.RTSP response <--
+RTSP/1.0 200 OK
+CSeq: 3
+Date: Fri, May 22 2015 04:57:33 GMT
+Transport: RTP/AVP;unicast;destination=210.76.104.51;source=192.168.1.202;client_port=32064-32065;server_port=6970-6971
+Session: 2DEAC771;timeout=90
+
+
+15.RTSP send -->
+SETUP rtsp://192.168.1.202/proxyStream/track2 RTSP/1.0
+CSeq: 4
+Authorization: Digest username="baustem", realm="LIVE555 Streaming Media",nonce="8b7cf5a06398b99dc0d22971f6cd9436",uri="rtsp://192.168.1.202/proxyStream", response="b0ddb1adb656602f772feabb39deb045"
+Session: 2DEAC771
+Transport:  RTP/AVP;unicast;destination=210.76.104.51;client_port=32024-32025
+User-Agent: YinHe Ltd.co RTSP 1.0
+
+
+16.RTSP response <--
+RTSP/1.0 200 OK
+CSeq: 4
+Date: Fri, May 22 2015 04:57:33 GMT
+Transport: RTP/AVP;unicast;destination=210.76.104.51;source=192.168.1.202;client_port=32024-32025;server_port=6972-6973
+Session: 2DEAC771;timeout=90
+
+
+17.<--SIP send 
+SIP/2.0 200 OK
+Via: SIP/2.0/UDP 210.76.104.51;branch=z9hG4bK22d2.c8ffda7dc39f6bea40f1cbd65f8bd51a.0
+Via: SIP/2.0/UDP 210.76.104.53;rport=5060;branch=z9hG4bK22d2.5a738f526af0ecaeeab8f8334809b59c.0
+Via: SIP/2.0/UDP 210.76.104.52;branch=z9hG4bK22d2.439cf6e9c31a32f93ec60d766144f117.1
+Via: SIP/2.0/UDP 210.76.104.53;branch=z9hG4bK22d2.bbb10db3296ff10ccac2b132bf7e262c.0
+Via: SIP/2.0/UDP 210.76.104.51;branch=z9hG4bK22d2.78c296f29b53f3052026c599d12193b7.0
+Via: SIP/2.0/UDP 192.168.16.81:5061;received=192.168.16.81;rport=5061;branch=z9hG4bK10730
+Record-Route: <sip:mt@210.76.104.51;lr=on;ftag=7030;nat=yes;did=4a8.91f2>
+Record-Route: <sip:mt@210.76.104.53;lr=on;ftag=7030;did=4a8.7e5>
+Record-Route: <sip:mo@210.76.104.53;lr=on;ftag=7030;did=4a8.7e5>
+Record-Route: <sip:mo@210.76.104.51;lr=on;ftag=7030;nat=yes;did=4a8.81f2>
+From: <sip:10000@ims1.sip.uniza.sk>;tag=7030
+To: <sip:10001@ims1.sip.uniza.sk>;tag=1146700671
+Call-ID: 668
+CSeq: 20 INVITE
+Contact: <sip:10001@122.101.71.11:41563>
+Content-Type: application/sdp
+User-Agent: sip2rtsp v1.0
+Content-Length:   632
+
+v=0
+o=- 1432265961129685 1 IN IP4 192.168.1.202
+s=LIVE555 Streaming Media v2016.03.16
+i=LIVE555 Streaming Media v2016.03.16
+t=0 0
+a=tool:LIVE555 Streaming Media v2016.03.16
+a=type:broadcast
+a=control:*
+a=range:npt=0-
+a=x-qt-text-nam:LIVE555 Streaming Media v2016.03.16
+a=x-qt-text-inf:LIVE555 Streaming Media v2016.03.16
+m=video 6970 RTP/AVP 96
+c=IN IP4 192.168.1.202
+b=AS:5000
+a=rtpmap:96 H264/90000
+a=fmtp:96 packetization-mode=1;profile-level-id=42001E;sprop-parameter-sets=Z0IAHpW4KA9k,aM48gA==
+a=control:track1
+m=audio 6972 RTP/AVP 97
+c=IN IP4 192.168.1.202
+b=AS:50
+a=rtpmap:97 PCMU/8000
+a=control:track2
+
+18.-->SIP recv
+ACK sip:10001@192.168.1.202:41563 SIP/2.0
+Via: SIP/2.0/UDP 210.76.104.51;branch=z9hG4bK22d2.9ecb251cc54e4324a3609a55b0fe5cfe.0
+Via: SIP/2.0/UDP 210.76.104.53;rport=5060;branch=z9hG4bK22d2.da36def550b1ac80f5b4d32519b8e418.0
+Via: SIP/2.0/UDP 210.76.104.53;branch=z9hG4bK22d2.cfaf84f2fb1d5cf7f10c3a688dca5903.0
+Via: SIP/2.0/UDP 210.76.104.51;branch=z9hG4bK22d2.73a8743f333b28c4e444c27462e8ad7b.0
+Via: SIP/2.0/UDP 192.168.16.81:5061;received=192.168.16.81;rport=5061;branch=z9hG4bK298
+From: <sip:10000@ims1.sip.uniza.sk>;tag=7030
+To: <sip:10001@ims1.sip.uniza.sk>;tag=1146700671
+Call-ID: 668
+CSeq: 20 ACK
+Contact: <sip:10000@192.168.16.81:5061>
+Max-Forwards: 66
+User-Agent: Linphone/3.5.0 (eXosip2/3.6.0)
+Content-Length: 0
+
+19. RTP transfer
+audio:210.76.104.51:32024 <==> 192.168.1.202:6972
+video:210.76.104.51:32064 <==> 192.168.1.202:6970
+
+20.RTSP send -->
+PLAY rtsp://192.168.1.202/proxyStream RTSP/1.0
+CSeq: 5
+Authorization: Digest username="baustem", realm="LIVE555 Streaming Media",nonce="8b7cf5a06398b99dc0d22971f6cd9436",uri="rtsp://192.168.1.202/proxyStream", response="3029bfe3037132b7c1c23d979f1def7b"
+Range: npt=0.0-
+Session: 2DEAC771
+User-Agent: YinHe Ltd.co RTSP 1.0
+
+
+21.RTSP response <--
+RTSP/1.0 200 OK
+CSeq: 5
+Date: Fri, May 22 2015 04:57:33 GMT
+Range: npt=0.000-
+Session: 2DEAC771
+RTP-Info: url=rtsp://192.168.1.202/proxyStream/track1;seq=7180;rtptime=2487761794,url=rtsp://192.168.1.202/proxyStream/track2;seq=53618;rtptime=3463719235
+
+
+22.RTSP send -->
+GET_PARAMETER rtsp://192.168.1.202/proxyStream RTSP/1.0
+CSeq: 6
+Authorization: Digest username="baustem", realm="LIVE555 Streaming Media",nonce="8b7cf5a06398b99dc0d22971f6cd9436",uri="rtsp://192.168.1.202/proxyStream", response="1e453973ef10b0b6e6662bb522b1ba9a"
+Session: 2DEAC771
+User-Agent: YinHe Ltd.co RTSP 1.0
+
+
+23.RTSP response <--
+RTSP/1.0 200 OK
+CSeq: 6
+Date: Fri, May 22 2015 04:58:12 GMT
+Session: 2DEAC771
+Content-Length: 10
+
+2016.03.16
+
+
+24.-->SIP recv
+BYE sip:10001@192.168.1.202:41563 SIP/2.0
+Via: SIP/2.0/UDP 210.76.104.51;branch=z9hG4bK32d2.7e53e13eae333b488e7a9b8ff217b395.0
+Via: SIP/2.0/UDP 210.76.104.53;rport=5060;branch=z9hG4bK32d2.9aef82d8f5c795e5a9e0781d91cc3613.0
+Via: SIP/2.0/UDP 210.76.104.53;branch=z9hG4bK32d2.5f24514dd43314f775430ed041349d61.0
+Via: SIP/2.0/UDP 210.76.104.51;branch=z9hG4bK32d2.046bece4cc43688e2b94acbe7d546c03.0
+Via: SIP/2.0/UDP 192.168.16.81:5061;received=192.168.16.81;rport=5061;branch=z9hG4bK6612
+From: <sip:10000@ims1.sip.uniza.sk>;tag=7030
+To: <sip:10001@ims1.sip.uniza.sk>;tag=1146700671
+Call-ID: 668
+CSeq: 21 BYE
+Contact: <sip:10000@192.168.16.81:5061>
+Max-forwards: 66
+User-agent: Linphone/3.5.0 (eXosip2/3.6.0)
+Content-Length: 0
+
+25.<--SIP send
+SIP/2.0 200 OK
+Via: SIP/2.0/UDP 210.76.104.51;branch=z9hG4bK32d2.7e53e13eae333b488e7a9b8ff217b395.0
+Via: SIP/2.0/UDP 210.76.104.53;rport=5060;branch=z9hG4bK32d2.9aef82d8f5c795e5a9e0781d91cc3613.0
+Via: SIP/2.0/UDP 210.76.104.53;branch=z9hG4bK32d2.5f24514dd43314f775430ed041349d61.0
+Via: SIP/2.0/UDP 210.76.104.51;branch=z9hG4bK32d2.046bece4cc43688e2b94acbe7d546c03.0
+Via: SIP/2.0/UDP 192.168.16.81:5061;received=192.168.16.81;rport=5061;branch=z9hG4bK6612
+From: <sip:10000@ims1.sip.uniza.sk>;tag=7030
+To: <sip:10001@ims1.sip.uniza.sk>;tag=1146700671
+Call-ID: 668
+CSeq: 21 BYE
+User-Agent: sip2rtsp v1.0
+Content-Length: 0
+
+26.RTSP send -->
+TEARDOWN rtsp://192.168.1.202/proxyStream RTSP/1.0
+CSeq: 7
+Authorization: Digest username="baustem", realm="LIVE555 Streaming Media",nonce="8b7cf5a06398b99dc0d22971f6cd9436",uri="rtsp://192.168.1.202/proxyStream", response="6ffc0abe174eb8ad5470b34f3eb7086c"
+Session: 2DEAC771
+User-Agent: YinHe Ltd.co RTSP 1.0
+
+
+27.RTSP response <--
+RTSP/1.0 200 OK
+CSeq: 7
+Date: Fri, May 22 2015 04:58:41 GMT
+
+
