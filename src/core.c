@@ -172,7 +172,7 @@ core_init(core *co)
 int 
 core_exit(core *co)
 {
-	s2r_log(co,LOG_NOTICE,"program has terminated.\n");
+	log(co,LOG_NOTICE,"program has terminated.\n");
 	
 	streams_stop(co);
 	if (co->log_fd != NULL && co->log_fd != stdout){
@@ -184,40 +184,50 @@ core_exit(core *co)
 	return 0;
 }
 
-
 int 
 core_show(core *co)
 {
-	/* sip<==>sip_side-rtsp_side<==>rtsp */
-	s2r_log(co,LOG_INFO,"rtpproxy-audio %x:%d<==>%x:%d(%d:%s)-%x:%d(%d:%s)<==>%x:%d\n",
-		((&co->b2bstreams[stream_audio_rtp].remote[side_sip])->sin_addr.s_addr)
-		,ntohs ((&co->b2bstreams[stream_audio_rtp].remote[side_sip])->sin_port)
-		,((&co->b2bstreams[stream_audio_rtp].local[side_sip])->sin_addr.s_addr)
-		,ntohs ((&co->b2bstreams[stream_audio_rtp].local[side_sip])->sin_port)
-		,co->b2bstreams[stream_audio_rtp].payload[side_sip].media_format
-		,co->b2bstreams[stream_audio_rtp].payload[side_sip].mime_type
-		,((&co->b2bstreams[stream_audio_rtp].local[side_rtsp])->sin_addr.s_addr)
-		,ntohs ((&co->b2bstreams[stream_audio_rtp].local[side_rtsp])->sin_port)
-		,co->b2bstreams[stream_audio_rtp].payload[side_rtsp].media_format
-		,co->b2bstreams[stream_audio_rtp].payload[side_rtsp].mime_type
-		,((&co->b2bstreams[stream_audio_rtp].remote[side_rtsp])->sin_addr.s_addr)
-		,ntohs ((&co->b2bstreams[stream_audio_rtp].remote[side_rtsp])->sin_port)
-		);
+	uint32_t ip1,ip2,ip3,ip4;
+	
+	ip1 = (&co->b2bstreams[stream_audio_rtp].remote[side_sip])->sin_addr.s_addr;
+	ip2 = (&co->b2bstreams[stream_audio_rtp].local[side_sip])->sin_addr.s_addr;
+	ip3 = (&co->b2bstreams[stream_audio_rtp].local[side_rtsp])->sin_addr.s_addr;
+	ip4 = (&co->b2bstreams[stream_audio_rtp].remote[side_rtsp])->sin_addr.s_addr;
+	
+	/* sip<==>sip_side-rtsp_side<==>rtsp */	
+	log(co,LOG_INFO,
+		"audio %d.%d.%d.%d:%d<==>%d.%d.%d.%d:%d(%d:%s)-%d.%d.%d.%d:%d(%d:%s)<==>%d.%d.%d.%d:%d\n",
+		(ip1 >> 0)&0x000000FF,(ip1 >> 8)&0x000000FF,(ip1 >> 16)&0x000000FF,(ip1 >> 24)&0x000000FF,
+		ntohs((&co->b2bstreams[stream_audio_rtp].remote[side_sip])->sin_port),
+		(ip2 >> 0)&0x000000FF,(ip2 >> 8)&0x000000FF,(ip2 >> 16)&0x000000FF,(ip2 >> 24)&0x000000FF,
+		ntohs((&co->b2bstreams[stream_audio_rtp].local[side_sip])->sin_port),
+		co->b2bstreams[stream_audio_rtp].payload[side_sip].media_format,
+		co->b2bstreams[stream_audio_rtp].payload[side_sip].mime_type,
+		(ip3 >> 0)&0x000000FF,(ip3 >> 8)&0x000000FF,(ip3 >> 16)&0x000000FF,(ip3 >> 24)&0x000000FF,
+		ntohs((&co->b2bstreams[stream_audio_rtp].local[side_rtsp])->sin_port),
+		co->b2bstreams[stream_audio_rtp].payload[side_rtsp].media_format,
+		co->b2bstreams[stream_audio_rtp].payload[side_rtsp].mime_type,
+		(ip4 >> 0)&0x000000FF,(ip4 >> 8)&0x000000FF,(ip4 >> 16)&0x000000FF,(ip4 >> 24)&0x000000FF,
+		ntohs((&co->b2bstreams[stream_audio_rtp].remote[side_rtsp])->sin_port));
 
-	s2r_log(co,LOG_INFO,"rtpproxy-video %x:%d<==>%x:%d(%d:%s)-%x:%d(%d:%s)<==>%x:%d\n", 
-		((&co->b2bstreams[stream_video_rtp].remote[side_sip])->sin_addr.s_addr)
-		,ntohs ((&co->b2bstreams[stream_video_rtp].remote[side_sip])->sin_port)
-		,((&co->b2bstreams[stream_video_rtp].local[side_sip])->sin_addr.s_addr)
-		,ntohs ((&co->b2bstreams[stream_video_rtp].local[side_sip])->sin_port)
-		,co->b2bstreams[stream_video_rtp].payload[side_sip].media_format
-		,co->b2bstreams[stream_video_rtp].payload[side_sip].mime_type
-		,((&co->b2bstreams[stream_video_rtp].local[side_rtsp])->sin_addr.s_addr)
-		,ntohs ((&co->b2bstreams[stream_video_rtp].local[side_rtsp])->sin_port)
-		,co->b2bstreams[stream_video_rtp].payload[side_rtsp].media_format
-		,co->b2bstreams[stream_video_rtp].payload[side_rtsp].mime_type
-		,((&co->b2bstreams[stream_video_rtp].remote[side_rtsp])->sin_addr.s_addr)
-		,ntohs ((&co->b2bstreams[stream_video_rtp].remote[side_rtsp])->sin_port)
-		);
+	ip1 = (&co->b2bstreams[stream_video_rtp].remote[side_sip])->sin_addr.s_addr;
+	ip2 = (&co->b2bstreams[stream_video_rtp].local[side_sip])->sin_addr.s_addr;
+	ip3 = (&co->b2bstreams[stream_video_rtp].local[side_rtsp])->sin_addr.s_addr;
+	ip4 = (&co->b2bstreams[stream_video_rtp].remote[side_rtsp])->sin_addr.s_addr;
+	log(co,LOG_INFO,
+		"video %d.%d.%d.%d:%d<==>%d.%d.%d.%d:%d(%d:%s)-%d.%d.%d.%d:%d(%d:%s)<==>%d.%d.%d.%d:%d\n",
+		(ip1>> 0)&0x000000FF,(ip1 >> 8)&0x000000FF,(ip1 >> 16)&0x000000FF,(ip1 >> 24)&0x000000FF,
+		ntohs((&co->b2bstreams[stream_video_rtp].remote[side_sip])->sin_port),
+		(ip2 >> 0)&0x000000FF,(ip2 >> 8)&0x000000FF,(ip2 >> 16)&0x000000FF,(ip2 >> 24)&0x000000FF,
+		ntohs((&co->b2bstreams[stream_video_rtp].local[side_sip])->sin_port),
+		co->b2bstreams[stream_video_rtp].payload[side_sip].media_format,
+		co->b2bstreams[stream_video_rtp].payload[side_sip].mime_type,
+		(ip3 >> 0)&0x000000FF,(ip3 >> 8)&0x000000FF,(ip3 >> 16)&0x000000FF,(ip3 >> 24)&0x000000FF,
+		ntohs((&co->b2bstreams[stream_video_rtp].local[side_rtsp])->sin_port),
+		co->b2bstreams[stream_video_rtp].payload[side_rtsp].media_format,
+		co->b2bstreams[stream_video_rtp].payload[side_rtsp].mime_type,
+		(ip4 >> 0)&0x000000FF,(ip4 >> 8)&0x000000FF,(ip4 >> 16)&0x000000FF,(ip4 >> 24)&0x000000FF,
+		ntohs((&co->b2bstreams[stream_video_rtp].remote[side_rtsp])->sin_port));
 	return 0;
 }
 

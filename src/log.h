@@ -19,8 +19,8 @@
  */
  
 
-#ifndef __LOG_H__
-#define __LOG_H__
+#ifndef __H__
+#define __H__
 
 #include <stdarg.h>
 #include "core.h"
@@ -34,15 +34,14 @@
 #define LOG_INFO        6       /* informational */
 #define LOG_DEBUG       7       /* debug-level messages */
 
-
-#define	s2r_log(co, level, format, args...){	\
-	_s2r_log(co,__FILE__,__LINE__, level, format, ## args); \
-}
-
-void _s2r_log(core *, const char *, int,int, const char *, ...);
+void log_write(core *, const char *, int,int, const char *, ...);
 
 int log_init(core *co);
 void *log_loop (void *arg);
-	
+
+#define	log(co, level, format, args...){	\
+	log_write(co,__FILE__,__LINE__, level, format, ## args); \
+}
+
 #endif
 

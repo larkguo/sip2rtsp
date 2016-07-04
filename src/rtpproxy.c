@@ -109,14 +109,20 @@ sock_create(core *co, stream_mode mode, b2b_side side)
 	memset(&co->b2bstreams[mode].remote[side],0,
 		sizeof(co->b2bstreams[mode].remote[side]));
 	co->b2bstreams[mode].local[side].sin_family      = AF_INET;
-	co->b2bstreams[mode].local[side].sin_addr.s_addr = inet_addr(co->localip);//htonl(INADDR_ANY);
+
+	if(side_sip == side){
+		co->b2bstreams[mode].local[side].sin_addr.s_addr = inet_addr(co->sip_localip);
+	}
+	if(side_rtsp == side){
+		co->b2bstreams[mode].local[side].sin_addr.s_addr = inet_addr(co->rtsp_localip);
+	}
 			
 	sock =  socket(AF_INET, SOCK_DGRAM, 0);
 	ret = bind(sock,(struct sockaddr *)&co->b2bstreams[mode].local[side], 
 		sizeof(co->b2bstreams[mode].local[side]));	
 	if( ret < 0 ){
-		s2r_log(co,LOG_DEBUG,"rtpproxy bind(%s:%d)=%d failed!\n",
-			co->localip,ntohs(co->b2bstreams[mode].local[side].sin_port),ret);
+		log(co,LOG_DEBUG,"rtpproxy bind(%s:%d)=%d failed!\n",
+			co->sip_localip,ntohs(co->b2bstreams[mode].local[side].sin_port),ret);
 
 		return -1;
 	}
@@ -148,7 +154,7 @@ pairsock_create(core *co, stream_mode mode, b2b_side side,int *port)
 	
 try_nextport:		
 	if(try_times > 3 ) {
-		s2r_log(co,LOG_ERR,"bind error times %d, start_port=%d\n", try_times, start_port);
+		log(co,LOG_ERR,"bind error times %d, start_port=%d\n", try_times, start_port);
 		return -1;
 	}
 	
@@ -182,6 +188,7 @@ streams_init(core *co)
 	if(0 == rtpproxy)
 		return 0;
 
+	/* create rtp and rtcp */
 	ret = pairsock_create(co, stream_audio_rtp, side_sip, &rtp_port);
 	if(0==ret) ret = pairsock_create(co, stream_video_rtp, side_sip, &rtp_port);
 	if(0==ret) ret = pairsock_create(co, stream_audio_rtp, side_rtsp, &rtp_port);

@@ -382,7 +382,7 @@ static void rtsp_decode_header (const char *lptr,
 		ADV_SPACE(lptr);
 		(header_types[*last_number].parse_routine)(lptr, client->decode_response, 1);
 	} else
-		s2r_log(client->co,LOG_DEBUG, "Not processing response header: %s\n", lptr);
+		log(client->co,LOG_DEBUG, "Not processing response header: %s\n", lptr);
 }
 static int rtsp_read_into_buffer (rtsp_client_t *client,
 								  uint32_t buffer_offset,
@@ -542,22 +542,22 @@ static int rtsp_parse_response (rtsp_client_t *client)
 		return (RTSP_RESPONSE_RECV_ERROR);
 	}
 
-	s2r_log(client->co,LOG_NOTICE, "rtsp response <--\n%s\n",client->m_resp_buffer);
+	log(client->co,LOG_NOTICE, "rtsp response <--\n%s\n",client->m_resp_buffer);
 	seperator = find_seperator(client->m_resp_buffer);
 	if (seperator == NULL) {
-		s2r_log(client->co,LOG_DEBUG, "Could not find seperator in header\n");
+		log(client->co,LOG_DEBUG, "Could not find seperator in header\n");
 		return RTSP_RESPONSE_MALFORM_HEADER;
 	}
 	do {
 		lptr = rtsp_get_next_line(client, seperator);
 		if (lptr == NULL) {
-			s2r_log(client->co,LOG_DEBUG, "Couldn't get next line\n");
+			log(client->co,LOG_DEBUG, "Couldn't get next line\n");
 			return (RTSP_RESPONSE_MALFORM_HEADER);
 		}
 	} while (*lptr == '\0');
 
 	if (strncasecmp(lptr, "RTSP/1.0", strlen("RTSP/1.0")) != 0) {
-		s2r_log(client->co,LOG_DEBUG, "RTSP/1.0 not found\n");
+		log(client->co,LOG_DEBUG, "RTSP/1.0 not found\n");
 		return RTSP_RESPONSE_MALFORM_HEADER;
 	}
 	p = lptr + strlen("RTSP/1.0\n");
@@ -573,7 +573,7 @@ static int rtsp_parse_response (rtsp_client_t *client)
 	  case '5':
 		  break;
 	  default:
-		  s2r_log(client->co,LOG_DEBUG, "Bad error code %s\n", p);
+		  log(client->co,LOG_DEBUG, "Bad error code %s\n", p);
 		  return RTSP_RESPONSE_MALFORM_HEADER;
 	}
 	p += 3;
@@ -610,7 +610,7 @@ static int rtsp_parse_response (rtsp_client_t *client)
 				ret = rtsp_read_into_buffer(client, 0, 1);
 
 				if (ret <= 0) {
-					s2r_log(client->co,LOG_DEBUG, "Returned from rtsp_read_into_buffer - error %d\n",
+					log(client->co,LOG_DEBUG, "Returned from rtsp_read_into_buffer - error %d\n",
 						ret);
 					return (-1);
 				}
@@ -669,7 +669,7 @@ int rtsp_get_response (rtsp_client_t *client)
 		} else {
 			decode = client->decode_response = malloc(sizeof(rtsp_decode_t));
 			if (decode == NULL) {
-				s2r_log(client->co,LOG_DEBUG, "Couldn't create decode response\n");
+				log(client->co,LOG_DEBUG, "Couldn't create decode response\n");
 				return (RTSP_RESPONSE_RECV_ERROR);
 			}
 		}
@@ -681,7 +681,7 @@ int rtsp_get_response (rtsp_client_t *client)
 			if (ret != 0) {
 				/*	if (client->thread == NULL)*/
 				rtsp_close_socket(client);
-				s2r_log(client->co,LOG_DEBUG, "return code %d from rtsp_parse_response\n", ret);
+				log(client->co,LOG_DEBUG, "return code %d from rtsp_parse_response\n", ret);
 				return (RTSP_RESPONSE_RECV_ERROR);
 			}
 

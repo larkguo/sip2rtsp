@@ -205,8 +205,8 @@ int rtsp_send_setup (rtsp_client_t *client,
 		return (RTSP_RESPONSE_BAD_URL);
 	}
 	if (strncmp(url, client->url, temp - url) != 0) {
-		s2r_log(client->co,LOG_DEBUG,"Bad url %s\n", url);
-		s2r_log(client->co,LOG_DEBUG, "Should be %s\n", client->url);
+		log(client->co,LOG_DEBUG,"Bad url %s\n", url);
+		log(client->co,LOG_DEBUG, "Should be %s\n", client->url);
 		return (RTSP_RESPONSE_BAD_URL);
 	}
 
@@ -291,7 +291,7 @@ int rtsp_send_setup (rtsp_client_t *client,
 			decode != NULL) {
 				*decode_result = client->decode_response;
 				client->decode_response = NULL;
-				s2r_log(client->co,LOG_DEBUG,"Error code %s %s\n",decode->retcode,decode->retresp);
+				log(client->co,LOG_DEBUG,"Error code %s %s\n",decode->retcode,decode->retresp);
 		}
 		return (ret);
 	}
@@ -310,21 +310,21 @@ static int check_session (rtsp_session_t *session,
 
 	client = session->parent;
 	if (client == NULL) {
-		s2r_log(client->co,LOG_DEBUG,"Session doesn't point to parent\n");
+		log(client->co,LOG_DEBUG,"Session doesn't point to parent\n");
 		return (FALSE);
 	}
 
 	sptr = client->session_list;
 	while (sptr != session && sptr != NULL) sptr = sptr->next;
 	if (sptr == NULL) {
-		s2r_log(client->co,LOG_DEBUG,"session not found in client list\n");
+		log(client->co,LOG_DEBUG,"session not found in client list\n");
 		return (FALSE);
 	}
 
 	if ((cmd != NULL) &&
 		(cmd->session != NULL) &&
 		(strcmp(cmd->session, session->session) != 0)) {
-			s2r_log(client->co,LOG_DEBUG, "Have cmd->session set wrong\n");
+			log(client->co,LOG_DEBUG, "Have cmd->session set wrong\n");
 			return (FALSE);
 	}
 	return (TRUE);
@@ -369,12 +369,12 @@ static int rtsp_send_play_or_pause (const char *command,
 
 		return (RTSP_RESPONSE_GOOD);
 	} else {
-		s2r_log(client->co,LOG_DEBUG,"%s return code %d\n", command, ret);
+		log(client->co,LOG_DEBUG,"%s return code %d\n", command, ret);
 		if (ret != RTSP_RESPONSE_RECV_ERROR &&
 			decode != NULL) {
 				*decode_result = client->decode_response;
 				client->decode_response = NULL;
-				s2r_log(client->co,LOG_DEBUG,"Error code %s %s\n",decode->retcode,decode->retresp);
+				log(client->co,LOG_DEBUG,"Error code %s %s\n",decode->retcode,decode->retresp);
 		}
 		return (ret);
 	}
@@ -538,12 +538,12 @@ static int rtsp_send_teardown_common (rtsp_client_t *client,
 		client->decode_response = NULL;
 		return (RTSP_RESPONSE_GOOD);
 	} else {
-		s2r_log(client->co,LOG_DEBUG,"TEARDOWN return code %d\n", ret);
+		log(client->co,LOG_DEBUG,"TEARDOWN return code %d\n", ret);
 		if (ret != RTSP_RESPONSE_RECV_ERROR &&
 			decode != NULL) {
 				*decode_result = client->decode_response;
 				client->decode_response = NULL;
-				s2r_log(client->co,LOG_DEBUG, "Error code %s %s\n",decode->retcode,decode->retresp);
+				log(client->co,LOG_DEBUG, "Error code %s %s\n",decode->retcode,decode->retresp);
 		}
 		return (ret);
 	}

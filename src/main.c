@@ -30,11 +30,11 @@
 static void 
 usage(void)
 {
-	printf ("\nUsage: " UA_STRING "\n"
-		"\t-h -- help\n"
-		"\t-f -- config file\n"
-		"\n\texample:\n"
-		"\tsip2rtsp -f s2r.cfg\n\n");
+        printf ("\nUsage: " UA_STRING "\n"
+                "\t-h -- help\n"
+                "\t-f -- config file\n"
+                "\n\texample:\n"
+                "\tsip2rtsp -f s2r.cfg\n\n");
 }
 
 int 
@@ -91,13 +91,14 @@ main(int argc, char *argv[])
 	co.contact = cfg_get_string(co.cfg,"sip","contact", NULL);
 	co.expiry = cfg_get_int(co.cfg,"sip","expiry", 3600);
 	co.firewallip = cfg_get_string(co.cfg,"sip","firewallip", NULL);
-	co.localip = cfg_get_string(co.cfg,"sip","localip", NULL);
-	co.localport = cfg_get_int(co.cfg,"sip","localport", 5060);
+	co.sip_localip = cfg_get_string(co.cfg,"sip","localip", "0.0.0.0");
+	co.sip_localport = cfg_get_int(co.cfg,"sip","localport", 5060);
 	co.proxy = cfg_get_string(co.cfg,"sip","proxy", NULL);
 	co.fromuser = cfg_get_string(co.cfg,"sip","from", NULL);
 	co.outboundproxy = cfg_get_string(co.cfg,"sip","outboundproxy", NULL);
 	co.authusername = cfg_get_string(co.cfg,"sip","authusername", NULL);
 	co.authpassword = cfg_get_string(co.cfg,"sip","authpassword", NULL);
+	co.rtsp_localip = cfg_get_string(co.cfg,"rtsp","localip", "0.0.0.0");
 	co.rtsp_url = cfg_get_string(co.cfg,"rtsp","url", NULL);
 	co.rtsp_username = cfg_get_string(co.cfg,"rtsp","username", NULL);
 	co.rtsp_password = cfg_get_string(co.cfg,"rtsp","password", NULL);
@@ -120,16 +121,17 @@ main(int argc, char *argv[])
 		return -1;
 	}
 
-	s2r_log(&co,LOG_INFO,"%s  up and running\n"
+	log(&co,LOG_INFO,"%s  up and running\n"
 		"proxy=%s\n"
 		"outboundproxy=%s\n"
 		"fromuser=%s\n"
 		"contact=%s\n"
 		"expiry=%d\n"
-		"localip=%s\n"
-		"localport=%d\n"
+		"sip_localip=%s\n"
+		"sip_localport=%d\n"
 		"authusername=%s\n"
 		"authpassword=%s\n"
+		"rtsp_localip=%s\n"
 		"rtsp_url=%s\n"
 		"rtsp_username=%s\n"
 		"rtsp_password=%s\n"
@@ -147,10 +149,11 @@ main(int argc, char *argv[])
 		co.fromuser,
 		co.contact,
 		co.expiry,
-		co.localip,
-		co.localport,
+		co.sip_localip,
+		co.sip_localport,
 		co.authusername,
 		co.authpassword,
+		co.rtsp_localip,
 		co.rtsp_url,
 		co.rtsp_username,
 		co.rtsp_password,
@@ -165,13 +168,13 @@ main(int argc, char *argv[])
 
 	ret = sip_init(&co);
 	if( 0 != ret ) {
-		s2r_log(&co,LOG_ERR,"sip_init failed!\n");
+		log(&co,LOG_ERR,"sip_init failed!\n");
 		return -1;
 	}
 
 	ret = streams_init(&co);
 	if( 0 != ret ) {
-		s2r_log(&co,LOG_ERR,"streams_init failed!\n");
+		log(&co,LOG_ERR,"streams_init failed!\n");
 		return -1;
 	}
 
@@ -184,4 +187,4 @@ main(int argc, char *argv[])
 	
 	return ret;
 }
-
+

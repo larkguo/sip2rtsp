@@ -27,10 +27,10 @@
 #include <string.h>
 #include "log.h"
 
-#define LOG_BUFF_SIZE        (2048)
+#define BUFF_SIZE        (2048)
 
 static const char *
-s2r_strlevel(int level)
+log_strlevel(int level)
 {
 	switch(level) {
 		case LOG_DEBUG:
@@ -57,7 +57,7 @@ s2r_strlevel(int level)
 }
 
 void
-_s2r_log(core *co, const char *file,int line,int level, const char *format, ...)
+log_write(core *co, const char *file,int line,int level, const char *format, ...)
 {
 	int lg;
 	va_list ap;
@@ -66,18 +66,18 @@ _s2r_log(core *co, const char *file,int line,int level, const char *format, ...)
 
 	if(level > co->log_level)
 		return;
-	buf = (char *)malloc(LOG_BUFF_SIZE*sizeof(char));
+	buf = (char *)malloc(BUFF_SIZE*sizeof(char));
 	if( NULL == buf){
 		printf("malloc NULL\n");
 	}
 	
 	va_start(ap, format);
 
-	lg=snprintf(buf, LOG_BUFF_SIZE, fmt, s2r_strlevel(level),file,line);
-	if (lg < LOG_BUFF_SIZE){
-		lg+=vsnprintf(buf+lg, LOG_BUFF_SIZE-lg, format, ap);
+	lg=snprintf(buf, BUFF_SIZE, fmt, log_strlevel(level),file,line);
+	if (lg < BUFF_SIZE){
+		lg+=vsnprintf(buf+lg, BUFF_SIZE-lg, format, ap);
 	}
-	buf[LOG_BUFF_SIZE-1]='\0';
+	buf[BUFF_SIZE-1]='\0';
 	osip_fifo_add(co->log_queue,buf);
 	
 	va_end(ap);

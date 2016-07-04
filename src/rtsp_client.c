@@ -125,13 +125,13 @@ rtsp_open (core *co,int call_id,char *video_host, uint16_t video_port,
 	strncpy(sdp_buff, decode->body, sdp_buff_len-1);
 	sdpdecode = set_sdp_decode_from_memory(decode->body);
 	if (sdpdecode == NULL)	{
-		s2r_log(rtsp_client->co,LOG_DEBUG,"Couldn't get sdp decode\n");
+		log(rtsp_client->co,LOG_DEBUG,"Couldn't get sdp decode\n");
 		ret = -1;
 		goto go_out;
 	}
 
 	if (sdp_decode(sdpdecode, &sdp, &translated) != 0){
-		s2r_log(rtsp_client->co,LOG_DEBUG,"Couldn't decode sdp\n");
+		log(rtsp_client->co,LOG_DEBUG,"Couldn't decode sdp\n");
 		ret = -1;
 		goto go_out;
 	}
@@ -166,7 +166,7 @@ rtsp_open (core *co,int call_id,char *video_host, uint16_t video_port,
 	decode = NULL;
 	ret = rtsp_send_setup(rtsp_client,media->control_string,&cmd,&session,&decode,0);
 	if (ret != RTSP_RESPONSE_GOOD || NULL == decode){
-		s2r_log(rtsp_client->co,LOG_DEBUG,"Response to setup is %d\n", ret);
+		log(rtsp_client->co,LOG_DEBUG,"Response to setup is %d\n", ret);
 		goto go_out;
 	}
 
@@ -199,7 +199,7 @@ rtsp_open (core *co,int call_id,char *video_host, uint16_t video_port,
 		decode = NULL;
 		ret=rtsp_send_setup(rtsp_client,media->control_string,&cmd,&session,&decode,1);
 		if (ret != RTSP_RESPONSE_GOOD || NULL == decode){
-			s2r_log(rtsp_client->co,LOG_DEBUG,"Response to setup is %d\n", ret);
+			log(rtsp_client->co,LOG_DEBUG,"Response to setup is %d\n", ret);
 			goto go_out;
 		}
 
@@ -262,7 +262,7 @@ rtsp_play(core *co)
 	}
 	ret = rtsp_send_aggregate_play(rtsp_client,co->rtsp_url,&cmd,&decode);  
 	if (ret != RTSP_RESPONSE_GOOD)	{
-		s2r_log(rtsp_client->co,LOG_DEBUG,"response to play is %d\n", ret);
+		log(rtsp_client->co,LOG_DEBUG,"response to play is %d\n", ret);
 	}else{
 		rtsp_client->last_update = rtsp_systemtime_get(NULL);
 	}
@@ -303,7 +303,7 @@ rtsp_pause(core *co)
 	}
 	ret = rtsp_send_aggregate_pause(rtsp_client,co->rtsp_url,&cmd,&decode);
 	if (ret != RTSP_RESPONSE_GOOD)
-		s2r_log(rtsp_client->co,LOG_DEBUG,"response to play is %d\n", ret);
+		log(rtsp_client->co,LOG_DEBUG,"response to play is %d\n", ret);
 
 	CHECK_AND_FREE(cmd.authorization);
 	osip_www_authenticate_free (auth);
@@ -344,7 +344,7 @@ rtsp_getparam(core *co)
 	
 	ret = rtsp_send_get_parameter(rtsp_client,co->rtsp_url, &cmd, &decode);
 	if (ret != RTSP_RESPONSE_GOOD)
-		s2r_log(rtsp_client->co,LOG_DEBUG,"response to get_parameter is %d\n", ret);
+		log(rtsp_client->co,LOG_DEBUG,"response to get_parameter is %d\n", ret);
 
 	CHECK_AND_FREE(cmd.authorization);
 	osip_www_authenticate_free (auth);
@@ -385,7 +385,7 @@ rtsp_stop(core *co)
 	
 	ret = rtsp_send_aggregate_teardown(rtsp_client,co->rtsp_url,&cmd,&decode);
 	if (ret != RTSP_RESPONSE_GOOD)
-		s2r_log(rtsp_client->co,LOG_DEBUG,"Teardown response %d\n", ret);
+		log(rtsp_client->co,LOG_DEBUG,"Teardown response %d\n", ret);
 	
 	osip_www_authenticate_free (auth);
 	CHECK_AND_FREE(cmd.authorization);

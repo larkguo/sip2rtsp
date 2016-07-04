@@ -55,7 +55,7 @@ sip_uas_process_acl(core *co,struct eXosip_t *context,eXosip_event_t *je)
 	if( ret < 0){
 		eXosip_lock(context);
 		eXosip_call_build_answer(context,je->tid,status,&answer);
-		if (answer){
+		if(answer){
 			eXosip_call_send_answer(context,je->tid,status,answer);
 		}
 		eXosip_unlock(context);
@@ -71,14 +71,14 @@ sdp_message_a_attr_value_get_with_pt(sdp_message_t *sdp,
 	int i,tmppt=0,scanned=0;
 	char *tmp;
 	sdp_attribute_t *attr;
-	for (i=0;(attr=sdp_message_attribute_get(sdp,pos,i))!=NULL;i++){
-		if (strncmp(field,attr->a_att_field,strlen(field))==0 && attr->a_att_value!=NULL){
+	for(i=0;(attr=sdp_message_attribute_get(sdp,pos,i))!=NULL;i++){
+		if(strncmp(field,attr->a_att_field,strlen(field))==0 && attr->a_att_value!=NULL){
 			int nb = sscanf(attr->a_att_value,"%i %n",&tmppt,&scanned);
 			/* the return value may depend on how %n is interpreted by the libc:see manpage*/
-			if (nb == 1 || nb==2 ){
-				if (pt==tmppt){
+			if(nb == 1 || nb==2 ){
+				if(pt==tmppt){
 					tmp=attr->a_att_value+scanned;
-					if (strlen(tmp)>0)
+					if(strlen(tmp)>0)
 						return tmp;
 				}
 			}
@@ -106,7 +106,7 @@ sdp_message_media_pt_process(core *co,sdp_message_t *sdp,int pos)
 	if( NULL == mtype)
 		return -1;
 	
-	if ( 0 == strncasecmp("audio", mtype, strlen("audio")) ){
+	if( 0 == strncasecmp("audio", mtype, strlen("audio")) ){
 		core_payload_get(co,stream_audio_rtp,side_sip,NULL,0, &pt_new);
 	}else if( 0 == strncasecmp("video", mtype, strlen("video")) ){
 		core_payload_get(co,stream_video_rtp,side_sip,NULL,0, &pt_new);
@@ -123,23 +123,23 @@ sdp_message_media_pt_process(core *co,sdp_message_t *sdp,int pos)
 	
 	/* m= */
 	snprintf (pt_str, sizeof (pt_str)-1, "%i", pt_new);	
-	s2r_log(co,LOG_DEBUG,"meida payload %s=>%s\n", number, pt_str);
+	log(co,LOG_DEBUG,"meida payload %s=>%s\n", number, pt_str);
 	
 	sdp_message_m_payload_del(sdp,pos,0);
 	sdp_message_m_payload_add(sdp,pos, osip_strdup(pt_str));
 	
 	/* a= */			
-	for (i=0;(attr=sdp_message_attribute_get(sdp,pos,i))!=NULL;i++){
-		if ( attr->a_att_value!=NULL){
+	for(i=0;(attr=sdp_message_attribute_get(sdp,pos,i))!=NULL;i++){
+		if( attr->a_att_value!=NULL){
 			int nb = sscanf(attr->a_att_value,"%i %n",&tmppt,&scanned);
 			/* the return value may depend on how %n is interpreted by the libc:see manpage*/
-			if (nb == 1 || nb==2 ){
-				if (pt_old==tmppt){ 
+			if(nb == 1 || nb==2 ){
+				if(pt_old==tmppt){ 
 					tmp=attr->a_att_value+scanned;
 					char buff[1024]={0};
-					if (strlen(tmp)>0){
+					if(strlen(tmp)>0){
 						snprintf(buff, sizeof(buff)-1, "%i %s", pt_new,tmp);
-						s2r_log(co,LOG_DEBUG,"attribute %s %s->%s\n",attr->a_att_field,attr->a_att_value,buff);
+						log(co,LOG_DEBUG,"attribute %s %s->%s\n",attr->a_att_field,attr->a_att_value,buff);
 						osip_free(attr->a_att_value);
 						attr->a_att_value = osip_strdup(buff);
 					}
@@ -159,11 +159,11 @@ rtsp_media_process(core *co,sdp_message_t *rtsp_sdp)
 	if(NULL == co  || NULL == rtsp_sdp)
 		return -1;
 
-	for (i = 0; !sdp_message_endof_media(rtsp_sdp, i) ; i++){
+	for(i = 0; !sdp_message_endof_media(rtsp_sdp, i) ; i++){
 		mtype = sdp_message_m_media_get(rtsp_sdp, i);
 		
 		/* for each payload type */
-		for (j=0;((number=sdp_message_m_payload_get(rtsp_sdp, i,j)) != NULL); j++){
+		for(j=0;((number=sdp_message_m_payload_get(rtsp_sdp, i,j)) != NULL); j++){
 			char *p = NULL;
 			const char *rtpmap=NULL;
 			char mime_type[64]= {0};
@@ -174,12 +174,12 @@ rtsp_media_process(core *co,sdp_message_t *rtsp_sdp)
 			if(NULL != rtpmap) 
 				strncpy(mime_type,rtpmap,sizeof(mime_type)-1);
 			p = strchr(mime_type,'/');
-			if (p)  *p='\0';
+			if(p)  *p='\0';
 
-			if (0 == strcasecmp("video", mtype)){
+			if(0 == strcasecmp("video", mtype)){
 				core_payload_set(co,stream_video_rtp,side_rtsp,mime_type,ptn);
 				break;
-			}else if (0 == strcasecmp("audio", mtype) ){
+			}else if(0 == strcasecmp("audio", mtype) ){
 				core_payload_set(co,stream_audio_rtp,side_rtsp,mime_type,ptn);
 				break;
 			}
@@ -206,8 +206,8 @@ sip_media_process(core *co,sdp_message_t *sip_sdp)
 	if(NULL == co || NULL == sip_sdp )
 		return -1;
 	
-	c_addr = sdp_message_c_addr_get (sip_sdp, -1, 0);
-	if (c_addr){
+	c_addr = sdp_message_c_addr_get(sip_sdp, -1, 0);
+	if(c_addr){
 		snprintf(audio_host, sizeof(audio_host)-1,"%s", c_addr);
 		snprintf(video_host, sizeof(video_host)-1,"%s", c_addr);
 	}
@@ -220,15 +220,15 @@ sip_media_process(core *co,sdp_message_t *sip_sdp)
 		if( NULL == med )
 			continue;
 
-		if ( 0 == strcasecmp("video", mtype)){
-			for (j = 0; (attr = sdp_message_attribute_get(sip_sdp,i,j))!=NULL;j++){
+		if( 0 == strcasecmp("video", mtype)){
+			for(j = 0; (attr = sdp_message_attribute_get(sip_sdp,i,j))!=NULL;j++){
 				if (strncmp("sendrecv",attr->a_att_field, strlen("sendrecv"))==0){
 					video_dir = stream_sendrecv;
-				}else if (strncmp("sendonly",attr->a_att_field, strlen("sendonly"))==0){
+				}else if(strncmp("sendonly",attr->a_att_field, strlen("sendonly"))==0){
 					video_dir = stream_sendonly;
-				}else if (strncmp("recvonly",attr->a_att_field, strlen("recvonly"))==0){
+				}else if(strncmp("recvonly",attr->a_att_field, strlen("recvonly"))==0){
 					video_dir = stream_recvonly;
-				}else if (strncmp("inactive",attr->a_att_field, strlen("inactive"))==0){
+				}else if(strncmp("inactive",attr->a_att_field, strlen("inactive"))==0){
 					video_dir = stream_inactive;
 				}
 			}
@@ -241,15 +241,15 @@ sip_media_process(core *co,sdp_message_t *sip_sdp)
 			core_remote_addr_set(co,stream_video_rtcp,side_sip,video_host,0);
 			core_remote_addr_set(co,stream_video_rtp,side_sip,NULL,video_port);
 			core_remote_addr_set(co,stream_video_rtcp,side_sip,NULL,video_port+1);
-		}else if (0 == strcasecmp("audio", mtype)){
-			for (j = 0;(attr = sdp_message_attribute_get(sip_sdp,i,j))!=NULL;j++){
-				if (strncmp("sendrecv",attr->a_att_field, strlen("sendrecv"))==0){
+		}else if(0 == strcasecmp("audio", mtype)){
+			for(j = 0;(attr = sdp_message_attribute_get(sip_sdp,i,j))!=NULL;j++){
+				if(strncmp("sendrecv",attr->a_att_field, strlen("sendrecv"))==0){
 					audio_dir = stream_sendrecv;
-				}else if (strncmp("sendonly",attr->a_att_field, strlen("sendonly"))==0){
+				}else if(strncmp("sendonly",attr->a_att_field, strlen("sendonly"))==0){
 					audio_dir = stream_sendonly;
-				}else if (strncmp("recvonly",attr->a_att_field, strlen("recvonly"))==0){
+				}else if(strncmp("recvonly",attr->a_att_field, strlen("recvonly"))==0){
 					audio_dir = stream_recvonly;
-				}else if (strncmp("inactive",attr->a_att_field, strlen("inactive"))==0){
+				}else if(strncmp("inactive",attr->a_att_field, strlen("inactive"))==0){
 					audio_dir = stream_inactive;
 				}
 			}
@@ -264,7 +264,7 @@ sip_media_process(core *co,sdp_message_t *sip_sdp)
 		}
 		
 		/* for each payload type */
-		for (k=0;((number=sdp_message_m_payload_get(sip_sdp, i,k)) != NULL); k++){
+		for(k=0;((number=sdp_message_m_payload_get(sip_sdp, i,k)) != NULL); k++){
 			char *p = NULL;
 			const char *rtpmap=NULL;
 			char sip_mime_type[64]= {0};
@@ -276,14 +276,14 @@ sip_media_process(core *co,sdp_message_t *sip_sdp)
 			if(NULL != rtpmap) 
 				strncpy(sip_mime_type,rtpmap,sizeof(sip_mime_type)-1);
 			p = strchr(sip_mime_type,'/');
-			if (p)  *p='\0';
-			if ( 0 == strcasecmp("video", mtype)){
+			if(p)  *p='\0';
+			if( 0 == strcasecmp("video", mtype)){
 				core_payload_get(co,stream_video_rtp,side_rtsp,rtsp_mime_type,sizeof(rtsp_mime_type),NULL);
 				if(0==strcasecmp(sip_mime_type,rtsp_mime_type)){
 					core_payload_set(co,stream_video_rtp,side_sip,sip_mime_type,ptn);
 					break;
 				}
-			}else if (0==strcasecmp("audio", mtype)){
+			}else if(0==strcasecmp("audio", mtype)){
 				core_payload_get(co,stream_audio_rtp,side_rtsp,rtsp_mime_type,sizeof(rtsp_mime_type),NULL);
 				if(0==strcasecmp(sip_mime_type,rtsp_mime_type)){
 					core_payload_set(co,stream_audio_rtp,side_sip,sip_mime_type,ptn);
@@ -358,8 +358,8 @@ sip_sdp_mediainfo_get(core *co, sdp_message_t *sip_sdp,
 	if(rtpproxy){ /* rtpproxy */
 		payload_init(co);
 			
-		snprintf(audio_host, audio_host_len,"%s", co->localip);
-		snprintf(video_host, video_host_len,"%s", co->localip);
+		snprintf(audio_host, audio_host_len,"%s", co->sip_localip);
+		snprintf(video_host, video_host_len,"%s", co->sip_localip);
 		core_local_addr_get(co,stream_audio_rtp,side_rtsp,NULL,0,audio_port);
 		core_local_addr_get(co,stream_video_rtp,side_rtsp,NULL,0,video_port);
 	}else{ /* no rtpproxy */
@@ -373,28 +373,28 @@ sip_sdp_mediainfo_get(core *co, sdp_message_t *sip_sdp,
 		if( NULL == sip_sdp )
 			return -1;
 		
-		c_addr = sdp_message_c_addr_get (sip_sdp, -1, 0);
-		if (c_addr)	{
+		c_addr = sdp_message_c_addr_get(sip_sdp, -1, 0);
+		if(c_addr)	{
 			snprintf(audio_host, audio_host_len,"%s", c_addr);
 			snprintf(video_host, video_host_len,"%s", c_addr);
 		}
-		for (i=0; !sdp_message_endof_media (sip_sdp, i) ; i++){
+		for(i=0; !sdp_message_endof_media (sip_sdp, i) ; i++){
 			mtype = sdp_message_m_media_get(sip_sdp, i);
 			conn = sdp_message_connection_get(sip_sdp, i, 0);
 			med = osip_list_get(&sip_sdp->m_medias, i);
-			if (med != NULL){
-				if (strncasecmp("audio", mtype,strlen("audio")) == 0){
+			if(med != NULL){
+				if(strncasecmp("audio", mtype,strlen("audio")) == 0){
 					*audio_port =  atoi(med->m_port);
 					if(NULL != conn && NULL != conn->c_addr)
 						snprintf(audio_host, audio_host_len,"%s",conn->c_addr);	
-					for (j = 0;(attr = sdp_message_attribute_get(sip_sdp,i,j))!=NULL;j++){
-						if (strncmp("sendrecv",attr->a_att_field, strlen("sendrecv"))==0){
+					for(j = 0;(attr = sdp_message_attribute_get(sip_sdp,i,j))!=NULL;j++){
+						if(strncmp("sendrecv",attr->a_att_field,strlen("sendrecv"))==0){
 							audio_dir = stream_sendrecv;
-						}else if (strncmp("sendonly",attr->a_att_field, strlen("sendonly"))==0){
+						}else if(strncmp("sendonly",attr->a_att_field,strlen("sendonly"))==0){
 							audio_dir = stream_sendonly;
-						}else if (strncmp("recvonly",attr->a_att_field, strlen("recvonly"))==0){
+						}else if(strncmp("recvonly",attr->a_att_field,strlen("recvonly"))==0){
 							audio_dir = stream_recvonly;
-						}else if (strncmp("inactive",attr->a_att_field, strlen("inactive"))==0){
+						}else if(strncmp("inactive",attr->a_att_field,strlen("inactive"))==0){
 							audio_dir = stream_inactive;
 						}
 					}
@@ -402,8 +402,8 @@ sip_sdp_mediainfo_get(core *co, sdp_message_t *sip_sdp,
 					*video_port = atoi(med->m_port);
 					if(NULL != conn && NULL != conn->c_addr)
 						snprintf(video_host, video_host_len,"%s",conn->c_addr);	
-					for (j = 0;(attr=sdp_message_attribute_get(sip_sdp,i,j))!=NULL;j++){
-						if (strncmp("sendrecv",attr->a_att_field, strlen("sendrecv"))==0){
+					for(j = 0;(attr=sdp_message_attribute_get(sip_sdp,i,j))!=NULL;j++){
+						if (strncmp("sendrecv",attr->a_att_field,strlen("sendrecv"))==0){
 							video_dir = stream_sendrecv;
 						}else if(strncmp("sendonly",attr->a_att_field,strlen("sendonly"))==0){
 							video_dir = stream_sendonly;
@@ -447,30 +447,55 @@ sip_sdp_answer(IN core *co, INOUT sdp_message_t *rtsp_sdp,
 	sdp_media_t *audio_media = NULL;
 	sdp_media_t *video_media = NULL;
 	int rtpproxy = 1;
-	
+	char *o_addr = NULL;
+
 	if(NULL == co || NULL == rtsp_sdp)
 		return -1;
 	rtpproxy = core_rtpproxy_get(co);
 	
 	rtsp_url_split(NULL,0,NULL,0,tohost,sizeof(tohost),NULL,NULL,0,co->rtsp_url);
-	for (i=0; !sdp_message_endof_media (rtsp_sdp, i) ; i++){
+
+	if(rtpproxy){
+		/* o= */	
+		o_addr = sdp_message_o_addr_get(rtsp_sdp);
+		if(o_addr) {
+			log(co,LOG_DEBUG,"o=%s->%s\n",rtsp_sdp->o_addr,co->sip_localip);
+			osip_free(rtsp_sdp->o_addr);
+		}
+		rtsp_sdp->o_addr = osip_strdup(co->sip_localip);
+
+		/* c= */
+		conn = sdp_message_connection_get(rtsp_sdp, -1, 0);
+		if(conn) {
+			log(co,LOG_DEBUG,"c=%s->%s\n",conn->c_addr,co->sip_localip);
+			osip_free(conn->c_addr);
+			conn->c_addr = osip_strdup(co->sip_localip);
+		}else{
+			log(co,LOG_DEBUG,"add c=%s\n",co->sip_localip);
+			sdp_message_c_connection_add(rtsp_sdp,-1,osip_strdup("IN"),osip_strdup("IP4"),
+				osip_strdup(co->sip_localip), NULL, NULL);
+		}
+	}
+	
+	/* m= */
+	for(i=0; !sdp_message_endof_media(rtsp_sdp, i) ; i++){
 		mtype = sdp_message_m_media_get(rtsp_sdp, i);
 		conn = sdp_message_connection_get(rtsp_sdp, i, 0);
 		med = osip_list_get(&rtsp_sdp->m_medias, i);
 		if (med != NULL){
 			char port_str[16]={0};
 			int port = 0;
-			if ( strncasecmp("video", mtype, strlen("video")) == 0){
+			if(strncasecmp("video", mtype, strlen("video")) == 0){
 				video_index = i;
 				video_media = med;
 				if(rtpproxy){ /* rtpproxy */
 					osip_free(med->m_port);
 					core_local_addr_get(co,stream_video_rtp,side_sip,NULL,0,&port);
-					snprintf (port_str, sizeof (port_str)-1, "%i", port);	
+					snprintf(port_str, sizeof (port_str)-1, "%i", port);	
 					med->m_port= osip_strdup(port_str); 
 					sdp_message_media_pt_process(co,rtsp_sdp,i);
 
-					if( video_transport->source[0] == '\0'){
+					if(video_transport->source[0] == '\0'){
 						core_remote_addr_set(co,stream_video_rtp,side_rtsp,tohost,0);
 						core_remote_addr_set(co,stream_video_rtcp,side_rtsp,tohost,0);
 					}else{
@@ -480,38 +505,40 @@ sip_sdp_answer(IN core *co, INOUT sdp_message_t *rtsp_sdp,
 					core_remote_addr_set(co,stream_video_rtp,side_rtsp,NULL,video_transport->server_port);
 					core_remote_addr_set(co,stream_video_rtcp,side_rtsp,NULL,video_transport->server_port+1);
 						
-					if( NULL != conn){
+					if(NULL != conn){
 						osip_free(conn->c_addr);
-						conn->c_addr = osip_strdup(co->localip);
+						conn->c_addr = osip_strdup(co->sip_localip);
 					}else{
 						sdp_message_c_connection_add(rtsp_sdp,i,osip_strdup("IN"),osip_strdup("IP4"),
-								osip_strdup(co->localip),NULL,NULL);
+								osip_strdup(co->sip_localip),NULL,NULL);
 					}
 				}else { /* no rtpproxy */
 					port = atoi(med->m_port);
-					if( 0 == port)	{	
+					if(0 == port)	{	
 	  					osip_free(med->m_port);
 						snprintf (port_str, sizeof (port_str)-1, "%i", video_transport->server_port);	
-						med->m_port= osip_strdup(port_str);  
+						med->m_port = osip_strdup(port_str);  
 					}
-					if( NULL != conn){
+					if(NULL != conn){
 						osip_free(conn->c_addr);
 						/* live555rtspproxy RTSP_ALLOW_CLIENT_DESTINATION_SETTING */
-						if( video_transport->source[0] != '\0' ) 
+						if(video_transport->source[0] != '\0' ) {
 							conn->c_addr = osip_strdup(video_transport->source);
-						else /* camera ? */
+						}else{ /* camera ? */
 							conn->c_addr = osip_strdup(tohost);
+						}
 					}else{
-						if(  video_transport->source[0] != '\0' )
+						if(video_transport->source[0] != '\0' ){
 							sdp_message_c_connection_add(rtsp_sdp,i,osip_strdup("IN"),osip_strdup("IP4"),
 								osip_strdup(video_transport->source),NULL,NULL);
-						else
+						}else{
 							sdp_message_c_connection_add(rtsp_sdp,i,osip_strdup("IN"),osip_strdup("IP4"),
 								osip_strdup(tohost),NULL,NULL);
+						}
 					}	
 				}
 			}
-			if ( strncasecmp("audio", mtype, strlen("audio")) == 0 ){
+			if(strncasecmp("audio", mtype, strlen("audio")) == 0 ){
 				audio_index = i;
 				audio_media = med;
 				if(rtpproxy){ /* rtpproxy */
@@ -520,7 +547,7 @@ sip_sdp_answer(IN core *co, INOUT sdp_message_t *rtsp_sdp,
 					snprintf (port_str, sizeof (port_str)-1, "%i", port);	
 					med->m_port= osip_strdup(port_str);  
 					sdp_message_media_pt_process(co,rtsp_sdp,i);
-					if( audio_transport->source[0] == '\0' ){
+					if(audio_transport->source[0] == '\0' ){
 						core_remote_addr_set(co,stream_audio_rtp,side_rtsp,tohost,0);
 						core_remote_addr_set(co,stream_audio_rtcp,side_rtsp,tohost,0);
 					}else{
@@ -530,34 +557,36 @@ sip_sdp_answer(IN core *co, INOUT sdp_message_t *rtsp_sdp,
 					core_remote_addr_set(co,stream_audio_rtp,side_rtsp,NULL,audio_transport->server_port);
 					core_remote_addr_set(co,stream_audio_rtcp,side_rtsp,NULL,audio_transport->server_port+1);
 
-					if( NULL != conn)	{
+					if(NULL != conn){
 						osip_free(conn->c_addr);
-						conn->c_addr = osip_strdup(co->localip);
+						conn->c_addr = osip_strdup(co->sip_localip);
 					}else{
 						sdp_message_c_connection_add(rtsp_sdp,i,osip_strdup("IN"),osip_strdup("IP4"),
-								osip_strdup(co->localip),NULL,NULL);
+								osip_strdup(co->sip_localip),NULL,NULL);
 					}
 				}else{ /* no rtpproxy */
 					port = atoi(med->m_port);
 					if(0 == port){
 	  					osip_free(med->m_port);
-						snprintf (port_str, sizeof (port_str)-1, "%i", audio_transport->server_port);		
+						snprintf(port_str, sizeof (port_str)-1, "%i", audio_transport->server_port);		
 						med->m_port= osip_strdup(port_str);  
 					}
-					if( NULL != conn)	{
+					if(NULL != conn)	{
 						osip_free(conn->c_addr);
 						/* live555rtspproxy RTSP_ALLOW_CLIENT_DESTINATION_SETTING */
-						if( audio_transport->source[0] != '\0' ) 
+						if(audio_transport->source[0] != '\0' ) {
 							conn->c_addr = osip_strdup(audio_transport->source);
-						else /* camera ? */
+						}else{ /* camera ? */
 							conn->c_addr = osip_strdup(tohost);
+						}
 					}else{
-						if( audio_transport->source[0] != '\0' )
+						if(audio_transport->source[0] != '\0' ){
 							sdp_message_c_connection_add(rtsp_sdp,i,osip_strdup("IN"),osip_strdup("IP4"),
 								osip_strdup(audio_transport->source),NULL,NULL);
-						else
+						}else{
 							sdp_message_c_connection_add(rtsp_sdp,i,osip_strdup("IN"),osip_strdup("IP4"),
 								osip_strdup(tohost),NULL,NULL);
+						}
 					}
 				}
 			}	
@@ -572,25 +601,24 @@ sip_sdp_answer(IN core *co, INOUT sdp_message_t *rtsp_sdp,
 		int audio_port = -1;
 		core_remote_addr_get(co,stream_video_rtp,side_sip,video_host,sizeof(video_host),&video_port);
 		core_remote_addr_get(co,stream_audio_rtp,side_sip,audio_host,sizeof(audio_host),&audio_port);
-		if( video_port <= 0 ){/* sip no video */
+		if(video_port <= 0 ){/* sip no video */
 			if(video_index >= 0){
 				osip_list_remove(&rtsp_sdp->m_medias,video_index);
-				s2r_log(co,LOG_INFO,"sip no video,remove rtsp video=%d\n",video_index);
+				log(co,LOG_INFO,"sip no video,remove rtsp video=%d\n",video_index);
 				video_index = -1;
 			}
 		}
-		if( audio_port <= 0){/* sip no audio */
+		if(audio_port <= 0){/* sip no audio */
 			if(audio_index >= 0){
 				osip_list_remove(&rtsp_sdp->m_medias,audio_index);
-				s2r_log(co,LOG_INFO,"sip no audio,remove rtsp audio=%d\n",audio_index);	
-			
+				log(co,LOG_INFO,"sip no audio,remove rtsp audio=%d\n",audio_index);	
 				audio_index = -1;
 			}
 		}
 		
 		/* audio before video */
-		if( video_index >= 0 && audio_index >=0 && video_index < audio_index ){
-			s2r_log(co,LOG_INFO,"video=%d(%p) before audio=%d(%p),reverse!\n",
+		if(video_index >= 0 && audio_index >=0 && video_index < audio_index ){
+			log(co,LOG_INFO,"video=%d(%p) before audio=%d(%p),reverse!\n",
 				video_index,video_media,audio_index,audio_media);	
 			osip_list_remove(&rtsp_sdp->m_medias,audio_index);
 			osip_list_add(&rtsp_sdp->m_medias,audio_media, 0);
@@ -618,8 +646,8 @@ sip_uas_process_invite(core *co,struct eXosip_t *context,eXosip_event_t *je)
 	rtsp_transport_parse_t video_transport;
 	rtsp_transport_parse_t audio_transport;
 	
-	memset(&video_transport,0, sizeof(video_transport));
-	memset(&audio_transport,0, sizeof(audio_transport));
+	memset(&video_transport,0,sizeof(video_transport));
+	memset(&audio_transport,0,sizeof(audio_transport));
 	
 	/* sip request */ 
 	eXosip_lock(context);
@@ -630,13 +658,13 @@ sip_uas_process_invite(core *co,struct eXosip_t *context,eXosip_event_t *je)
 	}
 	
 	sdp_message_to_str(sip_sdp,&sdp_offer);	
-	s2r_log(co,LOG_NOTICE, "-->sip invite\n%s\n", sdp_offer);
+	log(co,LOG_NOTICE, "-->sip invite\n%s\n",sdp_offer);
 	
 	sip_sdp_mediainfo_get(co,sip_sdp,video_host,sizeof(video_host)-1,&video_port,
 		audio_host,sizeof(audio_host)-1,&audio_port);
 
 	/* rtsp request & response */
-	ret = rtsp_open(co, je->cid,video_host,video_port,audio_host,audio_port, 
+	ret = rtsp_open(co,je->cid,video_host,video_port,audio_host,audio_port, 
 		&video_transport, &audio_transport,rtsp_sdp_buff,sizeof(rtsp_sdp_buff),&status);
 	if(0 != ret ){
 		goto go_out;
@@ -647,14 +675,16 @@ sip_uas_process_invite(core *co,struct eXosip_t *context,eXosip_event_t *je)
 	if( NULL == rtsp_sdp )  {
 		goto go_out;
 	}
-	ret = sdp_message_parse(rtsp_sdp, rtsp_sdp_buff);
+	ret = sdp_message_parse(rtsp_sdp,rtsp_sdp_buff);
 	if(0 != ret ){
-		s2r_log(co,LOG_ERR, "rtsp_sdp parse ret=%d\n",ret);
+		log(co,LOG_ERR, "rtsp_sdp parse ret=%d\n",ret);
 		goto go_out;
 	}
 
-	rtpproxy_media_process(co, sip_sdp, rtsp_sdp);
+	/* set  ip/port/payload */
+	rtpproxy_media_process(co, sip_sdp,rtsp_sdp);
 
+	/* replace ip/port/payload */
 	sip_sdp_answer(co,rtsp_sdp,&video_transport,&audio_transport);
 
 	sdp_message_to_str(rtsp_sdp,&sdp_answer);
@@ -671,7 +701,7 @@ go_out:
 			osip_message_set_content_type(answer, "application/sdp");
 		}
 		eXosip_call_send_answer(context,je->tid,status,answer);
-		s2r_log(co,LOG_NOTICE,"<--sip response %d\n%s\n",status,sdp_answer==NULL?"":sdp_answer);
+		log(co,LOG_NOTICE,"<--sip response %d\n%s\n",status,sdp_answer==NULL?"":sdp_answer);
 		
 	}
 	eXosip_unlock(context);
@@ -712,14 +742,14 @@ sip_uas_register(core *co,struct eXosip_t *context)
 	regid = eXosip_register_build_initial_register(excontext,co->fromuser,
 				co->proxy,co->contact,co->expiry,&reg);
 	if (regid < 1) {
-		s2r_log(co,LOG_ERR, "sip_register_build_initial_register failed %d\n",regid);
+		log(co,LOG_ERR, "sip_register_build_initial_register failed %d\n",regid);
 		return -1;
 	}
-	sip_add_outboundproxy(reg, co->outboundproxy);
+	sip_add_outboundproxy(reg,co->outboundproxy);
 	
-	ret = eXosip_register_send_register(excontext, regid, reg);
+	ret = eXosip_register_send_register(excontext,regid,reg);
 	if (ret != 0) {
-		s2r_log(co,LOG_ERR, "sip_register_send_register failed %d\n",regid);
+		log(co,LOG_ERR, "sip_register_send_register failed %d\n",regid);
 		return -1;
 	}
 	return 0;
@@ -735,13 +765,13 @@ sip_init(core *co)
 	
 try_bind:	
 	if (eXosip_init(excontext)) {
-		s2r_log(co,LOG_ERR, "sip_init failed\n");
+		log(co,LOG_ERR, "sip_init failed\n");
 		return -1;
 	}
-	ret = eXosip_listen_addr(excontext,IPPROTO_UDP,co->localip,co->localport,AF_INET,0);
+	ret = eXosip_listen_addr(excontext,IPPROTO_UDP,co->sip_localip,co->sip_localport,AF_INET,0);
 	if ( OSIP_SUCCESS != ret ) {
-		s2r_log(co,LOG_INFO, "sip_listen_addr %s:%d failed(%d)\n",co->localip,co->localport,ret);
-		co->localport += 1;
+		log(co,LOG_INFO, "sip_listen_addr %s:%d failed(%d)\n",co->sip_localip,co->sip_localport,ret);
+		co->sip_localport += 1;
 		try_maxnum -= 1;
 		if(try_maxnum <= 0) {
 			return -1;
@@ -752,10 +782,10 @@ try_bind:
 		}
 	}
 	
-	s2r_log(co,LOG_INFO, "sip_listen_addr %s:%d ok\n",co->localip,co->localport);
+	log(co,LOG_INFO,"sip_listen_addr %s:%d ok\n",co->sip_localip,co->sip_localport);
 	 
-	if (co->localip) {
-		eXosip_masquerade_contact(excontext, co->localip, co->localport);
+	if(co->sip_localip) {
+		eXosip_masquerade_contact(excontext,co->sip_localip,co->sip_localport);
 
 		if( NULL != co->fromuser) {
 			char contactbuf[HOST_BUFF_DEFAULT_LEN]={0};
@@ -764,16 +794,16 @@ try_bind:
 			
 			ret = osip_contact_init(&contact);
 			if( 0 == ret){
-				ret = osip_contact_parse(contact, co->contact);
+				ret = osip_contact_parse(contact,co->contact);
 				if( 0 != ret){
 					ret = osip_from_init(&from);
 					if(0 == ret){
-						ret = osip_from_parse(from, co->fromuser);
+						ret = osip_from_parse(from,co->fromuser);
 						if(0 == ret) {
 							snprintf(contactbuf,sizeof(contactbuf)-1,"<sip:%s@%s:%d>",
-								from->url->username, co->localip,co->localport);
+								from->url->username, co->sip_localip,co->sip_localport);
 							co->contact = osip_strdup(contactbuf);
-							s2r_log(co,LOG_INFO, "build contact %s\n",co->contact);
+							log(co,LOG_INFO,"build contact %s\n",co->contact);
 						}
 						osip_from_free(from);
 					}
@@ -783,17 +813,17 @@ try_bind:
 		}
 	}
 	
-	if (co->firewallip) {
-		s2r_log(co,LOG_DEBUG, "firewall %s:%i\n", co->firewallip,co->localport);
-		eXosip_masquerade_contact(excontext, co->firewallip, co->localport);
+	if(co->firewallip) {
+		log(co,LOG_DEBUG, "firewall %s:%i\n",co->firewallip,co->sip_localport);
+		eXosip_masquerade_contact(excontext,co->firewallip,co->sip_localport);
 	}
 
 	eXosip_set_user_agent(excontext, UA_STRING);
 
-	if (co->authusername && co->authpassword) {
-		if (eXosip_add_authentication_info(excontext,co->authusername,
+	if(co->authusername && co->authpassword) {
+		if(eXosip_add_authentication_info(excontext,co->authusername,
 			co->authusername,co->authpassword,NULL,NULL)) {
-			s2r_log(co,LOG_INFO, "sip_add_authentication_info failed\n");
+			log(co,LOG_INFO,"sip_add_authentication_info failed\n");
 			return -1;
 		}
 	}
@@ -812,8 +842,8 @@ sip_uas_loop(core *co)
 	int ret;
 	eXosip_event_t *je = NULL;
 	
-	for (;;) {
-		if (!(je = eXosip_event_wait(excontext, 0, 0))) {
+	for(;;) {
+		if(!(je = eXosip_event_wait(excontext,0,0))) {
 			
 			eXosip_lock(excontext);
 			eXosip_automatic_refresh(excontext); /* auto send register */
@@ -825,7 +855,7 @@ sip_uas_loop(core *co)
 			rtsp_automatic_action(co);	
 			continue;
 		}
-		s2r_log(co,LOG_INFO, "sip(%d-%d-%d-%d) %d(%s)\n",
+		log(co,LOG_INFO,"sip(%d-%d-%d-%d) %d(%s)\n",
 			je->cid,je->did,je->tid,je->rid,je->type,je->textinfo);
 			
 		eXosip_lock(excontext);
@@ -870,7 +900,7 @@ sip_uas_loop(core *co)
 			sip_uas_process_other(co,excontext,je);
 			break;
 		default:
-			s2r_log(co,LOG_DEBUG, "recieved unknown sip event\n");
+			log(co,LOG_DEBUG, "recieved unknown sip event\n");
 			break;
 
 		}

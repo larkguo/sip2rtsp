@@ -43,7 +43,7 @@ static int rtsp_get_server_address (rtsp_client_t *client)
 	hints.ai_socktype = SOCK_STREAM;
 	error = getaddrinfo(client->server_name, port, &hints, &client->addr_info);
 	if (error) {
-		s2r_log(client->co,LOG_DEBUG,"Can't get server address client %s - error %d\n",
+		log(client->co,LOG_DEBUG,"Can't get server address client %s - error %d\n",
 			client->server_name, error);
 		return error;
 	}
@@ -54,7 +54,7 @@ static int rtsp_get_server_address (rtsp_client_t *client)
 
 	host = gethostbyname(client->server_name);
 	if (host == NULL) {
-		s2r_log(client->co,LOG_DEBUG,"Can't get server host name %s\n", client->server_name);
+		log(client->co,LOG_DEBUG,"Can't get server host name %s\n", client->server_name);
 		return (error);
 	}
 	memcpy(&client->server_addr, host->h_addr,4);	
@@ -77,7 +77,7 @@ int rtsp_create_socket (rtsp_client_t *client)
 	}
 
 	if (client->server_name == NULL) {
-		s2r_log(client->co,LOG_DEBUG, "No server name in create socket\n");
+		log(client->co,LOG_DEBUG, "No server name in create socket\n");
 		return (-1);
 	}
 	result = rtsp_get_server_address(client);
@@ -92,7 +92,7 @@ int rtsp_create_socket (rtsp_client_t *client)
 #endif
 
 	if (client->server_socket == -1) {
-		s2r_log(client->co,LOG_DEBUG, "Couldn't create socket\n");
+		log(client->co,LOG_DEBUG, "Couldn't create socket\n");
 		return (-1);
 	}
 
@@ -112,7 +112,7 @@ int rtsp_create_socket (rtsp_client_t *client)
 #endif
 		);
 	if (result < 0){
-		s2r_log(client->co,LOG_DEBUG, "Couldn't connect socket - error %s\n",strerror(result));
+		log(client->co,LOG_DEBUG, "Couldn't connect socket - error %s\n",strerror(result));
 		return (-1);
 	}
 
@@ -171,14 +171,14 @@ int rtsp_receive_socket (rtsp_client_t *client, char *buffer, uint32_t len,
 		timeout.tv_usec = ((long)msec_timeout % 1000) * 1000;
 		ret = select(client->server_socket + 1, &read_set, NULL, NULL, &timeout);
 		if (ret <= 0) {
-			s2r_log(client->co,LOG_DEBUG, "Response timed out %d %d\n", msec_timeout, ret);
+			log(client->co,LOG_DEBUG, "Response timed out %d %d\n", msec_timeout, ret);
 			if (ret == -1) {
-				s2r_log(client->co,LOG_DEBUG, "Error is %s\n",strerror(ret));
+				log(client->co,LOG_DEBUG, "Error is %s\n",strerror(ret));
 			}
 			return (-1);
 		}
 	}
-	/*rtsp_debug(LOG_DEBUG, "Calling recv");*/
+
 	ret = recv(client->server_socket, buffer, len, 0);
 	return (ret);
 }

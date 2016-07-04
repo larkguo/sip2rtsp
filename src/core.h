@@ -32,7 +32,7 @@
 #define _GNU_SOURCE
 #define PROG_NAME "sip2rtsp"
 #define PROG_VER  "1.0.0"
-#define UA_STRING PROG_NAME " v" PROG_VER
+#define UA_STRING  PROG_NAME " v" PROG_VER
 
 typedef enum{
 	stream_audio_rtp = 0,
@@ -71,13 +71,13 @@ typedef struct core_t {
 	/* debug */
 	char *log_file;
 	FILE *log_fd;
-	int log_level; /* 0-7 , 0:LOG_EMERG, 7:LOG_DEBUG */
+	int log_level; /* 0-7 , 0:EMERG, 7:DEBUG */
 	osip_fifo_t *log_queue;
 	struct osip_thread *log_thread;
 	
 	/* sip */
-	int localport ;
-	char *localip ;
+	int sip_localport ;
+	char *sip_localip ;
 	char *contact ;
 	char *fromuser ;
 	char *firewallip ;
@@ -88,6 +88,7 @@ typedef struct core_t {
 	int expiry;
 	
 	/* rtsp */
+	char *rtsp_localip ;
 	char *rtsp_url ;
 	char *rtsp_username;
 	char *rtsp_password;

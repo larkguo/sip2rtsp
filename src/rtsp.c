@@ -93,7 +93,7 @@ rtsp_create_client_common (core *co,const char *url, int *perr)
 	client->co = co;
 	err = rtsp_dissect_url(client, url);
 	if (err != 0) {
-		s2r_log(co,LOG_WARNING,"Couldn't decode url[%s] %d\n", url, err);
+		log(co,LOG_WARNING,"Couldn't decode url[%s] %d\n", url, err);
 		*perr = err;
 		free_rtsp_client(client);
 		return (NULL);
@@ -126,7 +126,7 @@ rtsp_create_client (core *co,const char *url, int *err)
 	if (client == NULL) return (NULL);
 	*err = rtsp_create_socket(client);
 	if (*err != 0) {
-		s2r_log(co,LOG_WARNING,"Couldn't connect %s\n",url);
+		log(co,LOG_WARNING,"Couldn't connect %s\n",url);
 		free_rtsp_client(client);
 		return (NULL);
 	}
@@ -141,7 +141,7 @@ rtsp_send_and_get (rtsp_client_t *client,
 					   uint32_t buflen)
 {
 	int ret;
-	s2r_log(client->co,LOG_NOTICE,"rtsp send -->\n%s\n", buffer);
+	log(client->co,LOG_NOTICE,"rtsp send -->\n%s\n", buffer);
 	ret = rtsp_send2(client, buffer, buflen);
 	if (ret < 0) {
 		return (RTSP_RESPONSE_RECV_ERROR);
