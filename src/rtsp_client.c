@@ -28,7 +28,6 @@
 #include <sys/time.h>
 #endif
 
-/* RTSP head files */
 #include "rtsp_client.h"
 
 
@@ -39,7 +38,7 @@ static  const char auth_fmt[] =	"Digest username=\"%s\", realm=%s,nonce=%s,uri=\
 static time_t rtsp_systemtime_get(time_t * t);
 
 int 
-rtsp_open (core *co,int call_id,char *video_host, uint16_t video_port, 
+rtsp_open(core *co,int call_id,char *video_host, uint16_t video_port, 
 	char *audio_host, uint16_t audio_port , 
 	rtsp_transport_parse_t *video_transport,rtsp_transport_parse_t *audio_transport,
 	char *sdp_buff, int sdp_buff_len, int *status)
@@ -59,19 +58,21 @@ rtsp_open (core *co,int call_id,char *video_host, uint16_t video_port,
 	osip_www_authenticate_t *auth = NULL;
 	HASHHEX response;
 	
-	if( NULL != rtsp_client ){
-		*status = 180;
-		return -1;
+	if( NULL != rtsp_client && !rtsp_client->need_reconnect ){
+		strncpy(sdp_buff,rtsp_client->sdp_buf,sdp_buff_len);
+		memcpy(video_transport,&rtsp_client->video_transport,sizeof(rtsp_transport_parse_t));
+		memcpy(audio_transport,&rtsp_client->audio_transport,sizeof(rtsp_transport_parse_t));
+		return 0;
 	}
 	
+	free_rtsp_client(rtsp_client);
 	rtsp_client = rtsp_create_client(co,co->rtsp_url, &ret);
 	if(NULL == rtsp_client)	{
 		*status = 404;
 		return -1;
 	}
 	
-	rtsp_currentcall_set(call_id);
-	osip_www_authenticate_init (&auth);
+	osip_www_authenticate_init(&auth);
 
 	/* describe */
 	memset(&cmd, 0, sizeof(cmd));
@@ -95,7 +96,7 @@ rtsp_open (core *co,int call_id,char *video_host, uint16_t video_port,
 			cmd.authorization = strdup(auth_str);
 
 			if( NULL != auth)	{
-				ret = osip_www_authenticate_parse (auth, wwwauth);
+				ret = osip_www_authenticate_parse(auth, wwwauth);
 				if( 0 == ret )	{
 					ret=rtsp_compute_digest_response(co->rtsp_url,co->rtsp_username,
 						co->rtsp_password,auth->realm, auth->nonce,"DESCRIBE",response);
@@ -121,22 +122,26 @@ rtsp_open (core *co,int call_id,char *video_host, uint16_t video_port,
 		ret = -1;
 		goto go_out;
 	}
+
+	/* sdp_buf */
+	strncpy(rtsp_client->sdp_buf,decode->body,sizeof(rtsp_client->sdp_buf)-1);
 		
-	strncpy(sdp_buff, decode->body, sdp_buff_len-1);
+	strncpy(sdp_buff,decode->body, sdp_buff_len);
+	
 	sdpdecode = set_sdp_decode_from_memory(decode->body);
 	if (sdpdecode == NULL)	{
-		log(rtsp_client->co,LOG_DEBUG,"Couldn't get sdp decode\n");
+		log(co,LOG_DEBUG,"Couldn't get sdp decode\n");
 		ret = -1;
 		goto go_out;
 	}
 
 	if (sdp_decode(sdpdecode, &sdp, &translated) != 0){
-		log(rtsp_client->co,LOG_DEBUG,"Couldn't decode sdp\n");
+		log(co,LOG_DEBUG,"Couldn't decode sdp\n");
 		ret = -1;
 		goto go_out;
 	}
 
-	convert_relative_urls_to_absolute (sdp, co->rtsp_url);
+	convert_relative_urls_to_absolute(sdp, co->rtsp_url);
 	media = sdp->media;	
 	if( NULL != media && NULL != media->media){
 		if (strncasecmp(media->media, "video",strlen("video")) == 0) {
@@ -166,7 +171,7 @@ rtsp_open (core *co,int call_id,char *video_host, uint16_t video_port,
 	decode = NULL;
 	ret = rtsp_send_setup(rtsp_client,media->control_string,&cmd,&session,&decode,0);
 	if (ret != RTSP_RESPONSE_GOOD || NULL == decode){
-		log(rtsp_client->co,LOG_DEBUG,"Response to setup is %d\n", ret);
+		log(co,LOG_DEBUG,"Response to setup is %d\n", ret);
 		goto go_out;
 	}
 
@@ -175,8 +180,10 @@ rtsp_open (core *co,int call_id,char *video_host, uint16_t video_port,
 	rtsp_client->session = strdup(session->session);
 	if( MEDIA_VIDEO == media_type ){
 		ret = process_rtsp_transport(video_transport,decode->transport,"RTP/AVP");
+		memcpy(&rtsp_client->video_transport,video_transport,sizeof(rtsp_client->video_transport));
 	}else if(MEDIA_AUDIO ==  media_type){
 		ret = process_rtsp_transport(audio_transport,decode->transport,"RTP/AVP");
+		memcpy(&rtsp_client->audio_transport,audio_transport,sizeof(rtsp_client->audio_transport));
 	}
 
 	media = (sdp->media)->next;
@@ -199,7 +206,7 @@ rtsp_open (core *co,int call_id,char *video_host, uint16_t video_port,
 		decode = NULL;
 		ret=rtsp_send_setup(rtsp_client,media->control_string,&cmd,&session,&decode,1);
 		if (ret != RTSP_RESPONSE_GOOD || NULL == decode){
-			log(rtsp_client->co,LOG_DEBUG,"Response to setup is %d\n", ret);
+			log(co,LOG_DEBUG,"Response to setup is %d\n", ret);
 			goto go_out;
 		}
 
@@ -207,18 +214,24 @@ rtsp_open (core *co,int call_id,char *video_host, uint16_t video_port,
 		*status = atoi(decode->retcode);
 		if( MEDIA_VIDEO == media_type )	{
 			ret = process_rtsp_transport(video_transport,decode->transport, "RTP/AVP");
+			memcpy(&rtsp_client->video_transport,video_transport,sizeof(rtsp_client->video_transport));
 		}else if(MEDIA_AUDIO == media_type)	{
 			ret = process_rtsp_transport(audio_transport,decode->transport, "RTP/AVP");
+			memcpy(&rtsp_client->audio_transport,audio_transport,sizeof(rtsp_client->audio_transport));
 		}
 		media = media->next;
 	}
 
 go_out:
+	if( 0 != ret ){
+		free_rtsp_client(rtsp_client);
+		rtsp_client=NULL;
+	}
 	sdp_decode_info_free(sdpdecode);
 	CHECK_AND_FREE(cmd.authorization);
 	sdp_free_session_desc(sdp);
 	free_decode_response(decode);
-	osip_www_authenticate_free (auth);
+	osip_www_authenticate_free(auth);
 
 	return ret;
 }
@@ -236,20 +249,13 @@ rtsp_play(core *co)
 	if( NULL == rtsp_client|| NULL == co )
 		return -1;
 
-	/* if SIP hold/pause,then no Play */
-	if(stream_sendonly==rtsp_client->audio_dir
-		||stream_inactive==rtsp_client->audio_dir
-		||stream_sendonly==rtsp_client->video_dir
-		||stream_inactive==rtsp_client->video_dir)
-		return 0;
-
 	memset(&cmd, 0, sizeof(rtsp_command_t));
 	cmd.transport = NULL;
 	cmd.range = "npt=0.0-";
 	
 	if( NULL != rtsp_client->authorization){
-		osip_www_authenticate_init (&auth);
-		ret = osip_www_authenticate_parse (auth, rtsp_client->authorization);
+		osip_www_authenticate_init(&auth);
+		ret = osip_www_authenticate_parse(auth, rtsp_client->authorization);
 		
 		ret = rtsp_compute_digest_response(co->rtsp_url, co->rtsp_username, 
 			co->rtsp_password, auth->realm, auth->nonce,"PLAY",response);
@@ -262,13 +268,13 @@ rtsp_play(core *co)
 	}
 	ret = rtsp_send_aggregate_play(rtsp_client,co->rtsp_url,&cmd,&decode);  
 	if (ret != RTSP_RESPONSE_GOOD)	{
-		log(rtsp_client->co,LOG_DEBUG,"response to play is %d\n", ret);
+		log(co,LOG_DEBUG,"response to play is %d\n", ret);
 	}else{
 		rtsp_client->last_update = rtsp_systemtime_get(NULL);
 	}
 
 	CHECK_AND_FREE(cmd.authorization);
-	osip_www_authenticate_free (auth);
+	osip_www_authenticate_free(auth);
 	free_decode_response(decode);
 	
 	return 0;
@@ -291,8 +297,8 @@ rtsp_pause(core *co)
 	cmd.transport = NULL;
 
 	if( NULL != rtsp_client->authorization){
-		osip_www_authenticate_init (&auth);
-		ret = osip_www_authenticate_parse (auth, rtsp_client->authorization);
+		osip_www_authenticate_init(&auth);
+		ret = osip_www_authenticate_parse(auth, rtsp_client->authorization);
 		
 		ret = rtsp_compute_digest_response(co->rtsp_url, co->rtsp_username, co->rtsp_password,  auth->realm, auth->nonce,"PAUSE",response);
 		if( 0 == ret )	{
@@ -303,10 +309,10 @@ rtsp_pause(core *co)
 	}
 	ret = rtsp_send_aggregate_pause(rtsp_client,co->rtsp_url,&cmd,&decode);
 	if (ret != RTSP_RESPONSE_GOOD)
-		log(rtsp_client->co,LOG_DEBUG,"response to play is %d\n", ret);
+		log(co,LOG_DEBUG,"response to play is %d\n", ret);
 
 	CHECK_AND_FREE(cmd.authorization);
-	osip_www_authenticate_free (auth);
+	osip_www_authenticate_free(auth);
 	free_decode_response(decode);
 	return 0;
 
@@ -329,8 +335,8 @@ rtsp_getparam(core *co)
 	cmd.transport = NULL;
 	
 	if( NULL != rtsp_client->authorization){
-		osip_www_authenticate_init (&auth);
-		ret = osip_www_authenticate_parse (auth, rtsp_client->authorization);
+		osip_www_authenticate_init(&auth);
+		ret = osip_www_authenticate_parse(auth, rtsp_client->authorization);
 		
 		ret = rtsp_compute_digest_response(co->rtsp_url, co->rtsp_username, 
 			co->rtsp_password,  auth->realm, auth->nonce,"GETPARAM",response);
@@ -343,11 +349,15 @@ rtsp_getparam(core *co)
 	}
 	
 	ret = rtsp_send_get_parameter(rtsp_client,co->rtsp_url, &cmd, &decode);
-	if (ret != RTSP_RESPONSE_GOOD)
-		log(rtsp_client->co,LOG_DEBUG,"response to get_parameter is %d\n", ret);
+	if (ret != RTSP_RESPONSE_GOOD){
+		rtsp_client->need_reconnect = 1;
+		log(co,LOG_DEBUG,"response to get_parameter is %d\n", ret);
+	}else{
+		rtsp_client->need_reconnect = 0;
+	}
 
 	CHECK_AND_FREE(cmd.authorization);
-	osip_www_authenticate_free (auth);
+	osip_www_authenticate_free(auth);
 	free_decode_response(decode);
 	return 0;
 
@@ -370,8 +380,8 @@ rtsp_stop(core *co)
 	cmd.transport = NULL;
 	
 	if( NULL != rtsp_client->authorization){
-		osip_www_authenticate_init (&auth);
-		ret = osip_www_authenticate_parse (auth, rtsp_client->authorization);
+		osip_www_authenticate_init(&auth);
+		ret = osip_www_authenticate_parse(auth, rtsp_client->authorization);
 		
 		ret = rtsp_compute_digest_response(co->rtsp_url, co->rtsp_username,
 			co->rtsp_password,  auth->realm, auth->nonce,"TEARDOWN",response);
@@ -385,9 +395,9 @@ rtsp_stop(core *co)
 	
 	ret = rtsp_send_aggregate_teardown(rtsp_client,co->rtsp_url,&cmd,&decode);
 	if (ret != RTSP_RESPONSE_GOOD)
-		log(rtsp_client->co,LOG_DEBUG,"Teardown response %d\n", ret);
+		log(co,LOG_DEBUG,"Teardown response %d\n", ret);
 	
-	osip_www_authenticate_free (auth);
+	osip_www_authenticate_free(auth);
 	CHECK_AND_FREE(cmd.authorization);
 	free_decode_response(decode);
 	free_rtsp_client(rtsp_client);
@@ -396,23 +406,6 @@ rtsp_stop(core *co)
 	return 0;
 }
 
-int 
-rtsp_audiodir_set(stream_dir dir)
-{
-	if( NULL == rtsp_client )
-		return -1;
-	rtsp_client->audio_dir = dir;
-	return 0;
-}
-
-int 
-rtsp_videodir_set(stream_dir dir)
-{
-	if( NULL == rtsp_client )
-		return -1;
-	rtsp_client->video_dir = dir;
-	return 0;
-}
 
 int 
 rtsp_sessiontimeout_set(int timeout)
@@ -435,27 +428,6 @@ rtsp_sessiontimeout_get(int *timeout)
 	if( NULL == rtsp_client )
 		return -1;
 	*timeout = rtsp_client->session_timeout;
-	return 0;
-}
-
-int 
-rtsp_currentcall_set(int call_id)
-{
-	if( NULL == rtsp_client || call_id <= 0)
-		return -1;
-	
-	if( rtsp_client->call_id <= 0 )
-		rtsp_client->call_id = call_id;
-
-	return 0;
-}
-
-int 
-rtsp_currentcall_get(int *call_id)
-{
-	if( NULL == rtsp_client )
-		return -1;
-	*call_id = rtsp_client->call_id;
 	return 0;
 }
 

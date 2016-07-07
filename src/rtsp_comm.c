@@ -24,6 +24,7 @@
 
 #include "rtsp_private.h"
 
+
 /*
 * rtsp_create_socket()
 * creates and connects socket to server.  Requires rtsp_info_t fields
@@ -119,6 +120,7 @@ int rtsp_create_socket (rtsp_client_t *client)
 	return (0);
 }
 
+
 /*
 * rtsp_send()
 * Sends a buffer over connected socket.  If socket isn't connected,
@@ -134,12 +136,13 @@ int rtsp_create_socket (rtsp_client_t *client)
 int rtsp_send2 (rtsp_client_t *client, const char *buff, uint32_t len)
 {
 	int ret;
-
+		
 	if (client->server_socket == -1) {
 		if (rtsp_create_socket(client) != 0)
 			return (-1);
 	}
-	ret = send(client->server_socket, buff, len, 0);
+
+	ret = send(client->server_socket, buff, len, MSG_NOSIGNAL);
 	return (ret);
 }
 
@@ -179,7 +182,7 @@ int rtsp_receive_socket (rtsp_client_t *client, char *buffer, uint32_t len,
 		}
 	}
 
-	ret = recv(client->server_socket, buffer, len, 0);
+	ret = recv(client->server_socket, buffer, len, MSG_NOSIGNAL);
 	return (ret);
 }
 

@@ -18,16 +18,16 @@
  *              larkguo@gmail.com
  */
 
-#ifndef __TT_RTSP_H__
-#define __TT_RTSP_H__
+#ifndef __RTSP_CLIENT_H__
+#define __RTSP_CLIENT_H__
 
 #include "rtsp.h"
 #include "rtsp_auth.h"
 #include "transport_parse.h"
-#include "sip.h"
+#include "core.h"
 
 
-int rtsp_open (core *co, int call_id,char *video_host, uint16_t video_port, 
+int rtsp_open(core *co, int call_id,char *video_host, uint16_t video_port, 
 	char *audio_host, uint16_t audio_port , 
 	rtsp_transport_parse_t *video_transport,rtsp_transport_parse_t *audio_transport,
 	char *sdp_buff, int sdp_buff_len, int *status);
@@ -37,12 +37,8 @@ int rtsp_pause(core *co);
 int rtsp_stop(core *co);
 int rtsp_getparam(core *co);
 
-int rtsp_audiodir_set(stream_dir dir);
-int rtsp_videodir_set(stream_dir dir);
 int rtsp_sessiontimeout_set(int timeout);
 int rtsp_sessiontimeout_get(int *timeout);
-int rtsp_currentcall_set(int call_id);
-int rtsp_currentcall_get(int *call_id);
 void rtsp_automatic_action(core *co);
 
 #endif

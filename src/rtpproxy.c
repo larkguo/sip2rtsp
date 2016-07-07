@@ -23,38 +23,58 @@
 #include "rtpproxy.h"
 
 static int sock_address_get(int socket, char *ipbuf, int ipbuf_len, int *port);
-static int sock_create(core*co, stream_mode mode, b2b_side side);
-static int pairsock_create(core*co, stream_mode mode, b2b_side side,int *port);
-
-static int 
-nonblocking_set(int fd)
-{
-	int flags;
-
-	/* If they have O_NONBLOCK, use the Posix way to do it */
-#ifndef WIN32
-	/* Fixme: O_NONBLOCK is defined but broken on SunOS 4.1.x and AIX 3.2.5. */
-	if (-1 == (flags = fcntl(fd, F_GETFL, 0)))
-		flags = 0;
-	return fcntl(fd, F_SETFL, flags | O_NONBLOCK);
-#else
-	/* Otherwise, use the old way of doing it */
-	flags = 1;
-	return ioctlsocket(fd, FIONBIO, &flags);
-#endif
-}
+static int sock_create(core*co,int callid,stream_mode mode, b2b_side side);
 
 int 
 payload_init(core *co)
 {
 	int i, j;
-	for (i = 0; i < stream_max; i++) {
-		for (j = 0; j < side_max; j++) {
-			/* payload */
-			memset(&co->b2bstreams[i].payload[j],0,sizeof(co->b2bstreams[i].payload[j]));
-			co->b2bstreams[i].payload[j].media_format = -1;
+
+	/* payload */	
+	for(i = 0; i < stream_max; i++) {
+		memset(&co->rtsp.payload[i],0,sizeof(co->rtsp.payload[i]));
+		co->rtsp.payload[i].media_format = -1;
+
+		for(j = 0; j< MAX_SIPCALL; j++) {
+			memset(&co->sipcall[j].payload[i],0,sizeof(co->rtsp.payload[i]));
+			co->sipcall[j].payload[i].media_format = -1;
 		}
 	}
+	
+	return 0;
+}
+
+int 
+sock_blocking_set(int sockfd)
+{
+#ifdef WIN32
+	u_long val = 0;
+	return ioctlsocket(sockfd, FIONBIO, &val);
+#else
+	int val;
+
+	val = fcntl(sockfd, F_GETFL, 0);
+	if (fcntl(sockfd, F_SETFL, val & ~O_NONBLOCK) == -1) {
+		return -1;
+	}
+#endif
+	return 0;
+}
+
+int 
+sock_noblocking_set(int sockfd)
+{
+#ifdef WIN32
+	u_long val = 1;
+	return ioctlsocket(sockfd, FIONBIO, &val);
+#else /* WIN32 */
+	int val;
+
+	val = fcntl(sockfd, F_GETFL, 0);
+	if (fcntl(sockfd, F_SETFL, val | O_NONBLOCK) == -1) {
+		return -1;
+	}
+#endif /* WIN32 */
 	return 0;
 }
 
@@ -65,9 +85,9 @@ sock_address_get(int sock, char *ipbuf, int ipbuf_len, int *port)
 	struct sockaddr_in addr;
 	socklen_t slen = sizeof(addr);
 	
-	ret = getsockname(sock, (struct sockaddr *)&addr, &slen);
-	if( 0 == ret){
-		switch (((struct sockaddr *)&addr)->sa_family) {
+	ret = getsockname(sock,(struct sockaddr *)&addr,&slen);
+	if(0 == ret){
+		switch(((struct sockaddr *)&addr)->sa_family) {
 		case AF_INET:
 			if( NULL != ipbuf && ipbuf_len > 0){
 				inet_ntop(((struct sockaddr *)&addr)->sa_family,
@@ -94,7 +114,7 @@ sock_address_get(int sock, char *ipbuf, int ipbuf_len, int *port)
 }
 
 static int 
-sock_create(core *co, stream_mode mode, b2b_side side)
+sock_create(core *co,int callid,stream_mode mode, b2b_side side)
 {
 	int sock = -1;
 	int ret = -1;
@@ -105,94 +125,126 @@ sock_create(core *co, stream_mode mode, b2b_side side)
 		side >= side_max || side < side_sip){
 		return -1;
 	}
-	
-	memset(&co->b2bstreams[mode].remote[side],0,
-		sizeof(co->b2bstreams[mode].remote[side]));
-	co->b2bstreams[mode].local[side].sin_family      = AF_INET;
-
-	if(side_sip == side){
-		co->b2bstreams[mode].local[side].sin_addr.s_addr = inet_addr(co->sip_localip);
-	}
 	if(side_rtsp == side){
-		co->b2bstreams[mode].local[side].sin_addr.s_addr = inet_addr(co->rtsp_localip);
-	}
-			
-	sock =  socket(AF_INET, SOCK_DGRAM, 0);
-	ret = bind(sock,(struct sockaddr *)&co->b2bstreams[mode].local[side], 
-		sizeof(co->b2bstreams[mode].local[side]));	
-	if( ret < 0 ){
-		log(co,LOG_DEBUG,"rtpproxy bind(%s:%d)=%d failed!\n",
-			co->sip_localip,ntohs(co->b2bstreams[mode].local[side].sin_port),ret);
+		memset(&co->rtsp.remote[mode],0,sizeof(co->rtsp.remote[mode]));
+		co->rtsp.local[mode].sin_family      = AF_INET;
+		co->rtsp.local[mode].sin_addr.s_addr = inet_addr(co->rtsp_localip);
+		
+		sock =  socket(AF_INET, SOCK_DGRAM, 0);
+		ret = bind(sock,(struct sockaddr *)&co->rtsp.local[mode],sizeof(co->rtsp.local[mode]));	
+		if( ret < 0 ){
+			log(co,LOG_DEBUG,"rtpproxy rtsp bind(%s:%d)=%d failed!\n",
+				co->rtsp_localip,ntohs(co->rtsp.local[mode].sin_port),ret);
+			return -1;
+		}
+		co->rtsp.fds[mode] = sock;
+		ret = sock_address_get(sock,NULL, 0, &port);
+		if( 0 == ret ){
+			co->rtsp.local[mode].sin_port = htons(port);
+		}				
+		sock_noblocking_set(co->rtsp.fds[mode]);
+	}else{
+		int j = -1;
+		for(j = 0; j < MAX_SIPCALL; j++) {
+			if(co->sipcall[j].callid == callid){
+				memset(&co->sipcall[j].remote[mode],0,sizeof(co->sipcall[j].remote[mode]));
+				co->sipcall[j].local[mode].sin_family      = AF_INET;
+				co->sipcall[j].local[mode].sin_addr.s_addr = inet_addr(co->sip_localip);
 
-		return -1;
+				sock =  socket(AF_INET, SOCK_DGRAM, 0);
+				ret = bind(sock,(struct sockaddr *)&co->sipcall[j].local[mode],sizeof(co->sipcall[j].local[mode]));	
+				if( ret < 0 ){
+					log(co,LOG_DEBUG,"rtpproxy sip bind(%s:%d)=%d failed!\n",
+						co->sip_localip,ntohs(co->sipcall[j].local[mode].sin_port),ret);
+					return -1;
+				}
+				co->sipcall[j].fds[mode] = sock;
+				ret = sock_address_get(sock,NULL, 0, &port);
+				if( 0 == ret ){
+					co->sipcall[j].local[mode].sin_port = htons(port);
+				}						
+				sock_noblocking_set(co->sipcall[j].fds[mode]);
+			}	
+		}
 	}
-	co->b2bstreams[mode].fds[side] = sock;
-	ret = sock_address_get(sock,NULL, 0, &port);
-	if( 0 == ret ){
-		co->b2bstreams[mode].local[side].sin_port = htons(port);
-	}
-	if( co->b2bstreams[mode].fds[side]  >  co->maxfd){
-		co->maxfd = co->b2bstreams[mode].fds[side];
-	}
-			
-	nonblocking_set(co->b2bstreams[mode].fds[side]);
 	return sock;
 }
 
-static int 
-pairsock_create(core *co, stream_mode mode, b2b_side side,int *port)
+int 
+sock_pair_create(core *co,int callid,stream_mode mode, b2b_side side)
 {
 	int rtp_sock = -1;
 	int rtcp_sock = -1;
-	int rtp_port = *port;
+	int try_times = 0;
+	int current_port = core_rtp_current_port_get(co);
 	int start_port = core_rtp_start_port_get(co);
 	int end_port = core_rtp_end_port_get(co);
-	int try_times = 0;
-		
-	if(end_port < (start_port+8) )
-		end_port = start_port+8;
-	
+
 try_nextport:		
 	if(try_times > 3 ) {
-		log(co,LOG_ERR,"bind error times %d, start_port=%d\n", try_times, start_port);
+		log(co,LOG_ERR,"bind error times %d, current_port=%d\n",try_times,current_port);
 		return -1;
 	}
 	
-	if( rtp_port < start_port || rtp_port > end_port )
-		rtp_port = start_port;
-	
-	co->b2bstreams[mode].local[side].sin_port	= htons(rtp_port);
-	co->b2bstreams[mode+1].local[side].sin_port = htons(rtp_port+1);
-	rtp_sock = sock_create(co, mode,side);
-	rtcp_sock = sock_create(co, mode+1,side);
-	if( rtp_sock <= 0 || rtcp_sock <= 0 ){
-		if( rtp_sock > 0)  close(rtp_sock);
-		if( rtcp_sock > 0)  close(rtcp_sock);
-		rtp_port += 2;
-		try_times += 1;
-		goto try_nextport;
+	if(current_port >= end_port )
+		current_port = start_port;
+
+	/* rtsp */
+	if(side_rtsp == side){
+		if(co->rtsp.fds[mode] > 0)  return 0;
+		
+		co->rtsp.local[mode].sin_port	= htons(current_port);
+		co->rtsp.local[mode+1].sin_port = htons(current_port+1);
+		rtp_sock = sock_create(co,callid,mode,side);
+		rtcp_sock = sock_create(co,callid,mode+1,side);
+		if( rtp_sock <= 0 || rtcp_sock <= 0 ){
+			if(rtp_sock > 0)  close(rtp_sock);
+			if(rtcp_sock > 0)  close(rtcp_sock);
+			current_port += 2;
+			try_times += 1;
+			goto try_nextport;
+		}
+		current_port += 2;
+		core_rtp_current_port_set(co,current_port);
+	}else{ /* sip */
+		int j = -1;
+		for(j = 0; j < MAX_SIPCALL; j++) {
+			if(co->sipcall[j].callid == callid){
+				if(co->sipcall[j].fds[mode] > 0)  return 0;
+				
+				co->sipcall[j].local[mode].sin_port	= htons(current_port);
+				co->sipcall[j].local[mode+1].sin_port = htons(current_port+1);
+				rtp_sock = sock_create(co,callid,mode,side);
+				rtcp_sock = sock_create(co,callid,mode+1,side);
+				if( rtp_sock <= 0 || rtcp_sock <= 0 ){
+					if(rtp_sock > 0)  close(rtp_sock);
+					if(rtcp_sock > 0)  close(rtcp_sock);
+					current_port += 2;
+					try_times += 1;
+					goto try_nextport;
+				}
+				current_port += 2;
+				core_rtp_current_port_set(co,current_port);
+			}
+		}
 	}
 	
-	*port = rtp_port+2;
 	return 0;
-	
 }
+
 
 int 
 streams_init(core *co)
 {
 	int rtpproxy = core_rtpproxy_get(co);
-	int rtp_port = core_rtp_start_port_get(co);
 	int ret = 0;
 	
 	if(0 == rtpproxy)
 		return 0;
 
 	/* create rtp and rtcp */
-	ret = pairsock_create(co, stream_audio_rtp, side_sip, &rtp_port);
-	if(0==ret) ret = pairsock_create(co, stream_video_rtp, side_sip, &rtp_port);
-	if(0==ret) ret = pairsock_create(co, stream_audio_rtp, side_rtsp, &rtp_port);
-	if(0==ret) ret = pairsock_create(co, stream_video_rtp, side_rtsp, &rtp_port);
+	ret = sock_pair_create(co, -1,stream_audio_rtp, side_rtsp);
+	if(0==ret) ret = sock_pair_create(co, -1,stream_video_rtp, side_rtsp);
 	if( ret < 0) {
 		return ret;
 	}
@@ -212,95 +264,151 @@ streams_stop(core *co)
 	if(0 == rtpproxy)
 		return 0;
 	
-	for (i = 0; i < stream_max; i++) {
-		for (j = 0; j < side_max; j++) {
-			fd = co->b2bstreams[i].fds[j];
+	for(i = 0; i < stream_max; i++) {
+		fd = co->rtsp.fds[i];
+		if(fd >= 0) {
+			close(fd);
+			co->rtsp.fds[i] = -1;
+		}
+		
+		for(j = 0; j < MAX_SIPCALL; j++) {
+			fd = co->sipcall[j].fds[i];
 			if(fd >= 0) {
 				close(fd);
-				co->b2bstreams[i].fds[j] = -1;
+				co->sipcall[j].fds[i] = -1;
 			}
 		}
 	}
 	return 0;
 }
 
-int streams_loop(core *co)
+static int 
+streams_rtsp_loop(core *co)
 {
-	int					fd,nready;
-	fd_set				readset; 
-	ssize_t				recvlen;
-	int			slen;
-	struct timeval tv;
-	int i, j ;
-	
+	int				fd,nready;
+	fd_set			readset; 
+	ssize_t			recvlen;
+	int				slen;
+	struct timeval		tv;
+	int 				i, j ;
+	char				buf[RECV_BUFF_DEFAULT_LEN] = {0};
+	rtp_header *		rtp = NULL;
+	int 				maxfd = 0;
+	int 				ret = -1;
+	struct sockaddr_storage sa;
+	slen = sizeof(struct sockaddr_in);
+			
 	tv.tv_sec = 0;
 	tv.tv_usec = 10000; 
 	FD_ZERO(&readset);
 
-	for (i = 0; i < stream_max; i++) {
-		for (j = 0; j < side_max; j++) {
-			fd = co->b2bstreams[i].fds[j];
-			if( fd > 0) FD_SET(fd, &readset);
+	for(i = 0; i < stream_max; i++) {
+		fd = co->rtsp.fds[i];
+		if(fd > 0){
+			FD_SET(fd, &readset);
+			if(maxfd < fd) maxfd = fd; 
 		}
 	}
 	
-	nready = select(co->maxfd, &readset, NULL, NULL, &tv);
-	if( nready <= 0)
+	nready = select(maxfd+1, &readset, NULL, NULL, &tv);
+	if(nready <= 0)
 		return 0;
-	
-	for (i = 0; i < stream_max; i++) {
-		for (j = 0; j < side_max; j++) {
-			fd = co->b2bstreams[i].fds[j];
-			if (FD_ISSET(fd, &readset)) {
-				char		buf[RECV_BUFF_DEFAULT_LEN];
-				int k =  (j== side_sip) ?  side_rtsp : side_sip;
-				int to_payloadtype = -1;
-				int from_payloadtype = -1;
-				int from_version = -1;
-				rtp_header *rtp = NULL;
-				struct sockaddr_storage sa;
+
+	/* rtsp */
+	for(i = 0; i < stream_max; i++) {
+		fd = co->rtsp.fds[i];
+		if(FD_ISSET(fd, &readset)) {
+			/* symmetricRTP */
+			if(co->symmetric_rtp){
+				recvlen = recvfrom(fd,buf,sizeof(buf),0,
+					(struct sockaddr *)&co->rtsp.remote[i],(socklen_t *)&slen); 
+			}else{
+				recvlen = recvfrom(fd,buf,sizeof(buf),0,
+					(struct sockaddr *)&sa,(socklen_t *)&slen); 
+			}
+
+			/* rtcp */
+			if(stream_audio_rtcp == i || stream_video_rtcp == i)
+				goto sendtosip;
+
+			/* rtp header len > 12 */
+			if( recvlen <= 12 ){ 
+				goto sendtosip;
+			}
+
+			/* Check RTP version */
+			rtp = (rtp_header*)buf;
+			if( 2 != rtp->version ) {
+				goto sendtosip;
+			}
 			
-				slen = sizeof(struct sockaddr_in);
+			/* Check RTP payloadType */
+			if(rtp->payload_type != co->rtsp.payload[i].media_format){
+				goto sendtosip;
+			}
+sendtosip: 
+			for(j = 0; j < MAX_SIPCALL; j++) {
+				if(co->sipcall[j].callid <= 0)	continue;
+				stream_dir  dir = core_sipcall_dir_get(co,co->sipcall[j].callid,i);
+				if(stream_inactive == dir || stream_sendonly == dir)		continue;
 				
-				/* symmetricRTP */
-				if(co->symmetric_rtp != 0){
-					recvlen = recvfrom(fd,buf,sizeof(buf),0,
-						(struct sockaddr *)&co->b2bstreams[i].remote[j],(socklen_t *)&slen); 
-				}else{
-					recvlen = recvfrom(fd,buf,sizeof(buf),0,
-						(struct sockaddr *)&sa,(socklen_t *)&slen); 
-				}
-				
-				/* rtcp */
-				if(stream_audio_rtcp == i || stream_video_rtcp == i)
-					goto b2bsend;
-				
-				if( recvlen <= 12 ){ /* rtp header len > 12 */
-					goto b2bsend;
-				}
-
-				rtp= (rtp_header*)buf;
-				
-				/* Check RTP version */
-				from_version = rtp->version;
-				if( 2 != from_version ) {
-					goto b2bsend;
-				}
-				
-				/* Check RTP payloadType */
-				from_payloadtype = rtp->payload_type;
-				if( from_payloadtype!=co->b2bstreams[i].payload[j].media_format){
-					goto b2bsend;
-				}
-
 				/* payload_type map */
-				to_payloadtype = co->b2bstreams[i].payload[k].media_format;
-				if( to_payloadtype >= 0 ){
-					rtp->payload_type = to_payloadtype;
+				if(co->sipcall[j].payload[i].media_format >= 0 ){
+					rtp->payload_type = co->sipcall[j].payload[i].media_format;
 				}
-b2bsend:
-				sendto(co->b2bstreams[i].fds[k], buf, recvlen, 0, 
-						(struct sockaddr *)&co->b2bstreams[i].remote[k], slen);
+				ret = sendto(co->sipcall[j].fds[i],buf,recvlen,0,
+					(struct sockaddr *)&co->sipcall[j].remote[i],slen);
+				if(ret < 0){
+					log(co,LOG_DEBUG,"call(%d-%d) stream %d length=%d sendto failed:%d\n",
+						j,co->sipcall[j].callid, i, recvlen, ret);
+				}
+			}
+		}
+	}
+	
+	return 0;
+}
+
+
+static int 
+streams_sip_loop(core *co)
+{
+	int				fd,nready;
+	fd_set			readset; 
+	int				slen;
+	struct timeval 	tv;
+	int 				i, j ;
+	char				buf[RECV_BUFF_DEFAULT_LEN] = {0};
+	int 				maxfd = 0;
+
+	slen = sizeof(struct sockaddr_in);
+			
+	tv.tv_sec = 0;
+	tv.tv_usec = 10000; 
+	FD_ZERO(&readset);
+
+	for(i = 0; i < stream_max; i++) {
+		for(j = 0; j < MAX_SIPCALL; j++) {
+			fd = co->sipcall[j].fds[i];
+			if(fd > 0){
+				FD_SET(fd, &readset);
+				if(maxfd < fd) maxfd = fd; 
+			}
+		}
+	}
+	
+	nready = select(maxfd+1, &readset, NULL, NULL, &tv);
+	if(nready <= 0)
+		return 0;
+
+	for(i = 0; i < stream_max; i++) {
+		for(j = 0; j < MAX_SIPCALL; j++) {
+			if(co->sipcall[j].callid > 0){
+				fd = co->sipcall[j].fds[i];
+				if(FD_ISSET(fd, &readset)) {
+					recvfrom(fd,buf,sizeof(buf),0,
+						(struct sockaddr *)&co->sipcall[j].remote[i],(socklen_t *)&slen); 
+				}
 			}
 		}
 	}
@@ -308,5 +416,20 @@ b2bsend:
 	return 0;
 }
 
+int streams_loop(core *co)
+{	
+	int callnum = core_sipcallnum_get(co);
+	int rtpproxy = core_rtpproxy_get(co);
+	
+	if( rtpproxy && callnum > 0){
+		streams_rtsp_loop(co);
+		if(co->symmetric_rtp){
+			streams_sip_loop(co);
+		}
+	}else{
+		osip_usleep(20000);
+	}
+	return 0;
+}
 
 

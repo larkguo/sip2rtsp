@@ -24,6 +24,7 @@
 
 #include "rtsp.h"
 
+
 #ifndef TRUE
 #define TRUE 1
 #define FALSE 0
@@ -57,12 +58,19 @@ typedef enum{
 	MEDIA_AUDIO,
 }media_type;
 
-typedef enum{
-	stream_sendrecv,
-	stream_recvonly,
-	stream_sendonly,
-	stream_inactive
-}stream_dir;
+
+typedef struct rtsp_transport_parse_t {
+	int have_unicast;
+	int have_multicast;
+	unsigned short client_port;
+	unsigned short server_port;
+	char source[HOST_BUFF_DEFAULT_LEN];
+	char destination[HOST_BUFF_DEFAULT_LEN];
+	int have_ssrc;
+	unsigned int  ssrc;
+	unsigned int interleave_port;
+	int use_interleaved;
+} rtsp_transport_parse_t;
 
 /*
 * Some useful macros.
@@ -106,7 +114,7 @@ struct rtsp_client_ {
 	socket server_socket;
 #endif
 	int recv_timeout;
-
+	
 	/*
 	* rtsp information gleamed from other packets
 	*/
@@ -132,20 +140,16 @@ struct rtsp_client_ {
 	*/
 	int session_timeout;
 	time_t last_update;
-	
-	/*
-	* stream direction
-	*/
-	stream_dir audio_dir;
-	stream_dir video_dir;
-	
-	/*
-	* current call id
-	*/
-	int  call_id;
 
 	/* core */
 	core *co;
+
+	/* sdp */
+	char sdp_buf[RECV_BUFF_DEFAULT_LEN + 1];
+	rtsp_transport_parse_t video_transport;
+	rtsp_transport_parse_t audio_transport;
+
+	int need_reconnect; 
 };
 
 #ifdef __cplusplus

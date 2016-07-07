@@ -29,10 +29,13 @@
 #include <osip2/osip_fifo.h>
 #include "cfg.h"
 
+
 #define _GNU_SOURCE
 #define PROG_NAME "sip2rtsp"
-#define PROG_VER  "1.0.0"
+#define PROG_VER  "1.1.0"
 #define UA_STRING  PROG_NAME " v" PROG_VER
+
+#define MAX_SIPCALL		(5)
 
 typedef enum{
 	stream_audio_rtp = 0,
@@ -48,6 +51,13 @@ typedef enum{
 	side_max,
 }b2b_side;
 
+typedef enum{
+	stream_sendrecv,
+	stream_recvonly,
+	stream_sendonly,
+	stream_inactive
+}stream_dir;
+
 typedef struct poayload_type_t {
 	int media_format;	/* 0: PCMU, 8:PCMA */
 	char mime_type[64]; 	/* PCMU, H264 */
@@ -58,8 +68,30 @@ typedef struct b2bstream_t {
 	payload_type payload[side_max];
 	struct sockaddr_in	 remote[side_max];
 	struct sockaddr_in	 local[side_max];
-	
 } b2bstream;
+
+
+typedef struct rtspserver_t {
+	int fds[stream_max];
+	payload_type payload[stream_max];
+	struct sockaddr_in	 remote[stream_max];
+	struct sockaddr_in	 local[stream_max];
+} rtspserver;
+typedef struct sipcall_t {
+	int	callid;		
+	int	dialogid;	
+	int fds[stream_max];
+	payload_type payload[stream_max];
+	struct sockaddr_in	 remote[stream_max];
+	struct sockaddr_in	 local[stream_max];
+	
+	/*
+	* stream direction
+	*/
+	stream_dir audio_dir;
+	stream_dir video_dir;
+} sipcall;
+
 
 /* sip2rtsp co struct */
 typedef struct core_t {
@@ -86,9 +118,9 @@ typedef struct core_t {
 	char *authusername;
 	char *authpassword;
 	int expiry;
-	
+
 	/* rtsp */
-	char *rtsp_localip ;
+	char *rtsp_localip;
 	char *rtsp_url ;
 	char *rtsp_username;
 	char *rtsp_password;
@@ -97,10 +129,12 @@ typedef struct core_t {
 	/* rtpproxy */
 	int symmetric_rtp;
 	int rtpproxy;
-	unsigned short rtp_start_port;
-	unsigned short rtp_end_port;
-	int maxfd;
-	b2bstream b2bstreams[stream_max];
+	int rtp_start_port;
+	int rtp_end_port;
+	int rtp_current_port;
+	int	sipcallnum;
+	rtspserver rtsp;
+	sipcall	sipcall[MAX_SIPCALL];
 } core;
 
 
@@ -108,27 +142,39 @@ typedef struct core_t {
 extern "C" {
 #endif
 
-int core_remote_addr_set(core *co, stream_mode mode, b2b_side side, 
+int core_remote_addr_set(core *co,int callid,stream_mode mode,b2b_side side, 
 	char *host, int port);
 
-int core_remote_addr_get(core *co, stream_mode mode, b2b_side side, 
+int core_remote_addr_get(core *co,int callid,stream_mode mode,b2b_side side, 
 	char *host,int host_len, int *port);
 
-int core_payload_set(core *co,stream_mode mode,b2b_side side,
+int core_payload_set(core *co,int callid,stream_mode mode,b2b_side side,
 	char *mime_type,int media_format);
 
-int core_payload_get(core *co,stream_mode mode,b2b_side side,
+int core_payload_get(core *co,int callid,stream_mode mode,b2b_side side,
 	char *mime_type,int mime_type_len,int *media_format);
 
-int core_local_addr_get(core *co,stream_mode mode, b2b_side side, 
+int core_local_addr_get(core *co,int callid,stream_mode mode, b2b_side side, 
 	char *host,int host_len,int *port);
 
 int core_rtpproxy_get(core *co);
 int core_rtp_start_port_get(core *co);
 int core_rtp_end_port_get(core *co);
+int core_rtp_current_port_get(core *co);
+int core_rtp_current_port_set(core *co, int port);
 int core_init(core *co);
 int core_show(core *co);
 int core_exit(core *co);
+
+
+int core_sipcallnum_get(core *co);
+int core_sipcallnum_add(core *co);
+int core_sipcallnum_sub(core *co);
+int core_sipcall_release(core *co,int callid);
+int core_sipcall_set(core *co,struct eXosip_t *context,eXosip_event_t *je);
+int core_audiodir_set(core *co,int callid,stream_dir dir);
+int core_videodir_set(core *co,int callid,stream_dir dir);
+stream_dir core_sipcall_dir_get(core *co,int callid,stream_mode mode);
 
 #ifdef __cplusplus
 }

@@ -14,8 +14,8 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-#ifndef __HAVE_PLAYER_RTSP__
-#define __HAVE_PLAYER_RTSP__ 1
+#ifndef __TRANSPORT_PARSE_H__
+#define __TRANSPORT_PARSE_H__ 1
 
 #include "rtsp_private.h"
 
@@ -23,18 +23,6 @@
 extern "C" {
 #endif
 
-typedef struct rtsp_transport_parse_t {
-	int have_unicast;
-	int have_multicast;
-	unsigned short client_port;
-	unsigned short server_port;
-	char source[HOST_BUFF_DEFAULT_LEN];
-	char destination[HOST_BUFF_DEFAULT_LEN];
-	int have_ssrc;
-	unsigned int  ssrc;
-	unsigned int interleave_port;
-	int use_interleaved;
-} rtsp_transport_parse_t;
 
 int process_rtsp_transport(rtsp_transport_parse_t *parse,
 			   char *transport,

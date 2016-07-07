@@ -24,13 +24,12 @@
 #include <getopt.h>
 #include "rtpproxy.h"
 #include "sip.h"
-#include "core.h"
 #include "log.h"
 
 static void 
 usage(void)
 {
-        printf ("\nUsage: " UA_STRING "\n"
+        printf("\nUsage: " UA_STRING "\n"
                 "\t-h -- help\n"
                 "\t-f -- config file\n"
                 "\n\texample:\n"
@@ -50,7 +49,7 @@ main(int argc, char *argv[])
 		return -1;
 	}
 	
-	for (;;) {
+	for(;;) {
 #define short_options "hf:"
 #ifdef _GNU_SOURCE
 	    int option_index = 0;
@@ -61,15 +60,15 @@ main(int argc, char *argv[])
 	      {NULL, 0, NULL, 0}
 	    };
 
-   		c = getopt_long (argc, argv, short_options, long_options, &option_index);
+   		c = getopt_long(argc, argv, short_options, long_options, &option_index);
 #else
-    		c = getopt (argc, argv, short_options);
+    		c = getopt(argc, argv, short_options);
 #endif
 		
-		if (c == -1)
+		if(c == -1)
 			break;
 
-		switch (c) {
+		switch(c) {
 		case 'f':
 			co.cfg_file= optarg;
 			break;
@@ -106,8 +105,17 @@ main(int argc, char *argv[])
 	co.rtpproxy = cfg_get_int(co.cfg,"rtp","proxy", 1);
 	co.rtp_start_port = cfg_get_int(co.cfg,"rtp","start_port", 9000);
 	co.rtp_end_port = cfg_get_int(co.cfg,"rtp","end_port", 9100);
+	if(co.rtp_start_port % 2 != 0 ||
+		co.rtp_start_port <= 1024 ||
+		co.rtp_end_port > 65535 ||
+		(co.rtp_start_port+40) > co.rtp_end_port) {
+		printf("rtp_start_port %d or rtp_end_port %d invalid\n",co.rtp_start_port,co.rtp_end_port);
+		co.rtp_start_port = 9000;
+		co.rtp_end_port = 9100;
+	}	
+	co.rtp_current_port = co.rtp_start_port;
 	co.symmetric_rtp = cfg_get_int(co.cfg,"rtp","symmetric", 1);
-	if (!co.proxy || !co.fromuser || !co.rtsp_url) {
+	if(!co.proxy || !co.fromuser || !co.rtsp_url) {
 		usage();
 		return -1;
 	}
@@ -116,7 +124,7 @@ main(int argc, char *argv[])
 	
 	/* INIT Log File and Log LEVEL  */ 
 	co.log_thread = osip_thread_create(20000, log_loop, &co);
-	if (co.log_thread == NULL) {
+	if(co.log_thread == NULL) {
 		printf("pthread_create failed\n");
 		return -1;
 	}

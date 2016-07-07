@@ -45,28 +45,24 @@ CfgList *cfg_list_new(void *data)
 CfgList *cfg_list_remove_link(CfgList *list, CfgList *elem)
 {
 	CfgList *ret;
-	if (elem==list)
-	{
+	if(elem==list){
 		ret=elem->next;
 		elem->prev=NULL;
 		elem->next=NULL;
-		if (ret!=NULL) ret->prev=NULL;
-		if( NULL != elem)
-		{
+		if(ret!=NULL) ret->prev=NULL;
+		if( NULL != elem){
 			free(elem);
 			elem = NULL;
 		}
 		return ret;
 	}
 	elem->prev->next=elem->next;
-	if (elem->next!=NULL) 
-	{
+	if(elem->next!=NULL) {
 		elem->next->prev=elem->prev;
 	}
 	elem->next=NULL;
 	elem->prev=NULL;
-	if( NULL != elem)
-	{
+	if(NULL != elem){
 		free(elem);
 		elem = NULL;
 	}
@@ -75,10 +71,8 @@ CfgList *cfg_list_remove_link(CfgList *list, CfgList *elem)
 
 CfgList *cfg_list_find(CfgList *list, void *data)
 {
-	for(;list!=NULL;list=list->next)
-	{
-		if (list->data==data) 
-		{
+	for(;list!=NULL;list=list->next){
+		if(list->data==data) {
 			return list;
 		}
 	}
@@ -89,12 +83,10 @@ CfgList * cfg_list_append(CfgList *elem, void * data)
 {
 	CfgList *new_elem=cfg_list_new(data);
 	CfgList *it=elem;
-	if (elem==NULL) 
-	{
+	if(elem==NULL) {
 		return new_elem;
 	}
-	while (it->next!=NULL) 
-	{
+	while(it->next!=NULL) {
 		it=it->next;
 	}
 	it->next=new_elem;
@@ -105,8 +97,7 @@ CfgList * cfg_list_append(CfgList *elem, void * data)
 CfgList * cfg_list_prepend(CfgList *elem, void *data)
 {
 	CfgList *new_elem=cfg_list_new(data);
-	if (elem!=NULL) 
-	{
+	if(elem!=NULL) {
 		new_elem->next=elem;
 		elem->prev=new_elem;
 	}
@@ -116,12 +107,10 @@ CfgList * cfg_list_prepend(CfgList *elem, void *data)
 CfgList * cfg_list_concat(CfgList *first, CfgList *second)
 {
 	CfgList *it=first;
-	if (it==NULL) 
-	{
+	if(it==NULL) {
 		return second;
 	}
-	while(it->next!=NULL) 
-	{
+	while(it->next!=NULL)	{
 		it=it->next;
 	}
 	it->next=second;
@@ -133,19 +122,16 @@ CfgList * cfg_list_free(CfgList *list)
 {
 	CfgList *elem = list;
 	CfgList *tmp;
-	if (list==NULL) return NULL;
-	while(elem->next!=NULL) 
-	{
+	if(list==NULL) return NULL;
+	while(elem->next!=NULL) {
 		tmp = elem;
 		elem = elem->next;
-		if( NULL != tmp)
-		{
+		if( NULL != tmp){
 			free(tmp);
 			tmp = NULL;
 		}
 	}
-	if( NULL != elem)
-	{
+	if( NULL != elem){
 		free(elem);
 		elem = NULL;
 	}
@@ -156,12 +142,9 @@ CfgList * cfg_list_remove(CfgList *first, void *data)
 {
 	CfgList *it;
 	it=cfg_list_find(first,data);
-	if (it) 
-	{
+	if(it) {
 		return cfg_list_remove_link(first,it);
-	}
-	else 
-	{
+	}else {
 		printf("cfg_list_remove: no element with %p data was in the list\n", data);
 		return first;
 	}
@@ -170,8 +153,7 @@ CfgList * cfg_list_remove(CfgList *first, void *data)
 int cfg_list_size(const CfgList *first)
 {
 	int n=0;
-	while(first!=NULL)
-	{
+	while(first!=NULL){
 		++n;
 		first=first->next;
 	}
@@ -180,16 +162,14 @@ int cfg_list_size(const CfgList *first)
 
 void cfg_list_for_each(const CfgList *list, void (*func)(void *))
 {
-	for(;list!=NULL;list=list->next)
-	{
+	for(;list!=NULL;list=list->next){
 		func(list->data);
 	}
 }
 
 void cfg_list_for_each2(const CfgList *list, void (*func)(void *, void *), void *user_data)
 {
-	for(;list!=NULL;list=list->next)
-	{
+	for(;list!=NULL;list=list->next){
 		func(list->data,user_data);
 	}
 }
@@ -197,10 +177,8 @@ void cfg_list_for_each2(const CfgList *list, void (*func)(void *, void *), void 
 
 CfgList *cfg_list_find_custom(CfgList *list, int (*compare_func)(const void *, const void*), const void *user_data)
 {
-	for(;list!=NULL;list=list->next)
-	{
-		if (compare_func(list->data,user_data)==0) 
-		{
+	for(;list!=NULL;list=list->next){
+		if(compare_func(list->data,user_data)==0){
 			return list;
 		}
 	}
@@ -210,10 +188,8 @@ CfgList *cfg_list_find_custom(CfgList *list, int (*compare_func)(const void *, c
 void * cfg_list_nth_data(const CfgList *list, int index)
 {
 	int i;
-	for(i=0;list!=NULL;list=list->next,++i)
-	{
-		if (i==index) 
-		{
+	for(i=0;list!=NULL;list=list->next,++i){
+		if(i==index){
 			return list->data;
 		}
 	}
@@ -224,10 +200,8 @@ void * cfg_list_nth_data(const CfgList *list, int index)
 int cfg_list_position(const CfgList *list, CfgList *elem)
 {
 	int i;
-	for(i=0;list!=NULL;list=list->next,++i)
-	{
-		if (elem==list) 
-		{
+	for(i=0;list!=NULL;list=list->next,++i){
+		if(elem==list){
 			return i;
 		}
 	}
@@ -238,10 +212,8 @@ int cfg_list_position(const CfgList *list, CfgList *elem)
 int cfg_list_index(const CfgList *list, void *data)
 {
 	int i;
-	for(i=0;list!=NULL;list=list->next,++i)
-	{
-		if (data==list->data) 
-		{
+	for(i=0;list!=NULL;list=list->next,++i){
+		if(data==list->data){
 			return i;
 		}
 	}
@@ -254,24 +226,18 @@ CfgList *cfg_list_insert_sorted(CfgList *list, void *data, int (*compare_func)(c
 	CfgList *it=NULL,*previt=NULL;
 	CfgList *nelem=NULL;
 	CfgList *ret=list;
-	if (list==NULL) 
-	{
+	if(list==NULL){
 		return cfg_list_append(list,data);
-	}else
-	{
+	}else{
 		nelem=cfg_list_new(data);
-		for(it=list;it!=NULL;it=it->next)
-		{
+		for(it=list;it!=NULL;it=it->next){
 			previt=it;
-			if (compare_func(data,it->data)<=0)
-			{
+			if(compare_func(data,it->data)<=0){
 				nelem->prev=it->prev;
 				nelem->next=it;
-				if (it->prev!=NULL)
-				{
+				if(it->prev!=NULL){
 					it->prev->next=nelem;
-				}else
-				{
+				}else{
 					ret=nelem;
 				}
 				it->prev=nelem;
@@ -287,20 +253,16 @@ CfgList *cfg_list_insert_sorted(CfgList *list, void *data, int (*compare_func)(c
 CfgList *cfg_list_insert(CfgList *list, CfgList *before, void *data)
 {
 	CfgList *elem=NULL;
-	if (list==NULL || before==NULL) 
-	{
+	if(list==NULL || before==NULL) {
 		return cfg_list_append(list,data);
 	}
 	for(elem=list;elem!=NULL; elem=elem->next)
 	{
-		if (elem==before)
+		if(elem==before)
 		{
-			if (elem->prev==NULL)
-			{
+			if(elem->prev==NULL){
 				return cfg_list_prepend(list,data);
-			}
-			else
-			{
+			}else	{
 				CfgList *nelem=cfg_list_new(data);
 				nelem->prev=elem->prev;
 				nelem->next=elem;
@@ -342,18 +304,15 @@ CfgSection *cfg_section_new(const char *name)
 void cfg_item_destroy(void *pitem)
 {
 	CfgItem *item=(CfgItem*)pitem;
-	if(NULL != item->key)
-	{
+	if(NULL != item->key){
 		free(item->key);
 		item->key = NULL;
 	}
-	if( NULL != item->value)
-	{
+	if( NULL != item->value){
 		free(item->value);
 		item->value = NULL;
 	}
-	if(NULL != item)
-	{
+	if(NULL != item){
 		free(item);
 		item = NULL;
 	}
@@ -361,12 +320,10 @@ void cfg_item_destroy(void *pitem)
 
 void cfg_section_destroy(CfgSection *sec)
 {
-	if(NULL== sec)
-	{
+	if(NULL== sec){
 		return ;
 	}
-	if( NULL != sec->name)
-	{
+	if( NULL != sec->name){
 		free(sec->name);
 		sec->name = NULL;
 	}
@@ -394,10 +351,8 @@ void cfg_remove_section(Cfg *cfg, CfgSection *section)
 static int is_first_char(const char *start, const char *pos)
 {
 	const char *p=NULL;
-	for(p=start;p<pos;p++)
-	{
-		if (*p!=' ') 
-		{
+	for(p=start;p<pos;p++){
+		if(*p!=' '){
 			return 0;
 		}
 	}
@@ -409,13 +364,11 @@ CfgSection *cfg_find_section(Cfg *cfg, const char *name)
 	CfgSection *sec = NULL;
 	CfgList *elem = NULL;
 
-	if( NULL == cfg)	 return NULL;
+	if(NULL == cfg)	 return NULL;
 	/*printf("Looking for section %s\n",name);*/
-	for (elem=cfg->sections;elem!=NULL; elem=elem->next)
-	{
+	for(elem=cfg->sections;elem!=NULL; elem=elem->next)	{
 		sec=(CfgSection*)elem->data;
-		if (strcmp(sec->name,name)==0)
-		{
+		if(strcmp(sec->name,name)==0){
 			/*printf("Section %s found\n",name);*/
 			return sec;
 		}
@@ -428,14 +381,12 @@ CfgItem *cfg_section_find_item(CfgSection *sec, const char *name)
 	CfgList *elem = NULL;
 	CfgItem *item = NULL;
 
-	if( NULL == sec) 	return NULL;
+	if(NULL == sec) 	return NULL;
 	
 	/*printf("Looking for item %s\n",name);*/
-	for (elem=sec->items;elem!=NULL;elem=elem->next)
-	{
+	for(elem=sec->items;elem!=NULL;elem=elem->next){
 		item=(CfgItem*)elem->data;
-		if (strcmp(item->key,name)==0) 
-		{
+		if(strcmp(item->key,name)==0){
 			/*printf("Item %s found\n",name);*/
 			return item;
 		}
@@ -448,91 +399,73 @@ void cfg_parse(Cfg *cfg, FILE *file, const char separator)
 	char tmp[MAX_LEN]= {'\0'};
 	CfgSection *cur=NULL;
 
-	if (file==NULL) 
-	{
+	if(file==NULL) {
 		return;
 	}
 #if 0
 	cur=cfg_section_new(SECTION_GLOBAL);
 	cfg_add_section(cfg,cur);
 #endif
-	while(fgets(tmp,MAX_LEN,file)!=NULL)
-	{
+	while(fgets(tmp,MAX_LEN,file)!=NULL){
 		//tmp[sizeof(tmp) -1] = '\0';
 		char *pos1,*pos2;
 		tmp[sizeof(tmp) -1] = '\0';
 
 		pos1=strchr(tmp,'[');
-		if (pos1!=NULL && is_first_char(tmp,pos1) )
-		{
+		if(pos1!=NULL && is_first_char(tmp,pos1) ){
 			pos2=strchr(pos1,']');
-			if (pos2!=NULL)
-			{
+			if(pos2!=NULL){
 				int nbs;
 				char secname[MAX_LEN]={0};
 				/* found section */
 				*pos2='\0';
 				nbs = sscanf(pos1+1,"%s",secname);
-				if (nbs == 1 )
-				{
-					if (strlen(secname)>0)
-					{
+				if(nbs == 1 ){
+					if(strlen(secname)>0){
 						//str_trim(secname);
 						cur=cfg_find_section (cfg,secname);
-						if (cur==NULL)
-						{
+						if(cur==NULL){
 							cur=cfg_section_new(secname);
 							cfg_add_section(cfg,cur);
 						}
 					}
-				}else
-				{
+				}else{
 					printf("parse error!\n");
 				}
 			}
 		}else {
 			pos1=strchr(tmp,separator);
-			if (pos1!=NULL)
-			{
+			if(pos1!=NULL){
 				char key[MAX_LEN]={0};
 				*pos1='\0';
 
 				strncpy(key,tmp,sizeof(key)-1);
 				//str_trim(key);
-				if (sscanf(tmp,"%s",key)>0)
-				{
+				if(sscanf(tmp,"%s",key)>0)	{
 					pos1++;
 					pos2=strchr(pos1,'\r');
-					if (pos2==NULL)
-					{
+					if(pos2==NULL){
 						pos2=strchr(pos1,'\n');
 					}
-					if (pos2==NULL) 
-					{
+					if(pos2==NULL){
 						pos2=pos1+strlen(pos1);
-					}else 
-					{
+					}else{
 						*pos2='\0'; /*replace the '\n' */
 						pos2--;
 					}
 					/* remove ending white spaces */
-					for (; pos2>pos1 && *pos2==' ';pos2--) 
-					{
+					for(; pos2>pos1 && *pos2==' ';pos2--) {
 						*pos2='\0';
 					}
 					//if (pos2-pos1>=0)
 					{
 						/* found a pair key,value */
-						if (cur!=NULL)
-						{
+						if(cur!=NULL){
 							CfgItem *item=cfg_section_find_item(cur,key);
-							if (item==NULL)
-							{
+							if(item==NULL){
 								cfg_section_add_item(cur, cfg_item_new(key,pos1));
-							}else
-							{
-								if( NULL != item->value)
-								{
+							}else{
+								if(NULL != item->value){
 									free(item->value);
 									item->value = NULL;
 								}
@@ -552,16 +485,16 @@ void cfg_parse(Cfg *cfg, FILE *file, const char separator)
 Cfg * cfg_new(const char *filename,const char separator)
 {
 	Cfg *cfg=(Cfg *)calloc(sizeof(Cfg),1);
-	if (filename!=NULL){
+	if(filename!=NULL){
 		cfg->filename=strdup(filename);
 		cfg->file=fopen(filename,"r");
 		//cfg->file=fopen(filename,"rw");
-		if (cfg->file!=NULL)	{
+		if(cfg->file!=NULL)	{
 			cfg_parse(cfg,cfg->file,separator);
 			fclose(cfg->file);			
 #ifndef WIN32
 			/* make existing configuration files non-group/world-accessible */
-			if (chmod(filename, S_IRUSR | S_IWUSR) == -1)
+			if(chmod(filename, S_IRUSR | S_IWUSR) == -1)
 				printf("unable to correct permissions on configuration file: %s\n",strerror(errno));
 #endif 
 			cfg->file=NULL;
@@ -574,7 +507,7 @@ Cfg * cfg_new(const char *filename,const char separator)
 int cfg_read_file(Cfg *cfg, const char *filename, const char separator)
 {
 	FILE* f=fopen(filename,"r");
-	if (f!=NULL)	{
+	if(f!=NULL)	{
 		cfg_parse(cfg,f,separator);
 		fclose(f);
 		return 0;
@@ -601,7 +534,7 @@ void cfg_destroy(Cfg *cfg)
 	if( NULL == cfg){
 		return ;
 	}
-	if (cfg->filename!=NULL) {
+	if(cfg->filename!=NULL) {
 		free(cfg->filename);
 		cfg->filename = NULL;
 	}
@@ -622,9 +555,9 @@ char *cfg_get_string(Cfg *cfg, const char *section, const char *key, char *defau
 	CfgSection *sec=NULL;
 	CfgItem *item=NULL;
 	sec=cfg_find_section(cfg,section);
-	if (sec!=NULL){
+	if(sec!=NULL){
 		item=cfg_section_find_item(sec,key);
-		if (item!=NULL) 	{
+		if(item!=NULL) 	{
 			return item->value;
 		}
 	}
@@ -634,7 +567,7 @@ char *cfg_get_string(Cfg *cfg, const char *section, const char *key, char *defau
 int cfg_get_int(Cfg *cfg,const char *section, const char *key, int default_value)
 {
 	const char *str=cfg_get_string(cfg,section,key,NULL);
-	if (str!=NULL) {
+	if(str!=NULL) {
 		return atoi(str);
 	}else {
 		return default_value;
@@ -645,7 +578,7 @@ float cfg_get_float(Cfg *cfg,const char *section, const char *key, float default
 {
 	const char *str=cfg_get_string(cfg,section,key,NULL);
 	float ret=default_value;
-	if (str==NULL) {
+	if(str==NULL) {
 		return default_value;
 	}
 	sscanf(str,"%f",&ret);
@@ -660,20 +593,20 @@ void cfg_set_string(Cfg *cfg,const char *section, const char *key, const char *v
 	if( NULL == cfg )	 return ;
 	
 	sec = cfg_find_section(cfg,section);
-	if (sec!=NULL){
+	if(sec!=NULL){
 		item=cfg_section_find_item(sec,key);
-		if (item!=NULL){
-			if (value!=NULL){
+		if(item!=NULL){
+			if(value!=NULL){
 				cfg_item_set_value(item,value);
 			}else {
 				cfg_section_remove_item(sec,item);
 			}
 		}else{
-			if (value!=NULL){
+			if(value!=NULL){
 				cfg_section_add_item(sec, cfg_item_new(key,value));
 			}
 		}
-	}else if (value!=NULL)	{
+	}else if(value!=NULL)	{
 		sec=cfg_section_new(section);
 		cfg_add_section(cfg,sec);
 		cfg_section_add_item(sec, cfg_item_new(key,value));
@@ -712,7 +645,7 @@ void cfg_section_write(CfgSection *sec, FILE *file)
 int cfg_sync(Cfg *cfg)
 {
 	FILE *file;
-	if (NULL == cfg ||  NULL == cfg->filename) {
+	if(NULL == cfg ||  NULL == cfg->filename) {
 		return -1;
 	}
 
@@ -721,7 +654,7 @@ int cfg_sync(Cfg *cfg)
 	(void) umask(S_IRWXG | S_IRWXO);
 #endif
 	file=fopen(cfg->filename,"w");
-	if (file==NULL)	{
+	if(file==NULL)	{
 		printf("Could not write %s ! Maybe it is read-only. Configuration will not be saved.\n",cfg->filename);
 		return -1;
 	}
@@ -733,8 +666,7 @@ int cfg_sync(Cfg *cfg)
 
 int cfg_has_section(Cfg *cfg, const char *section)
 {
-	if (cfg_find_section(cfg,section)!=NULL)
-	{
+	if(cfg_find_section(cfg,section)!=NULL)	{
 		return 1;
 	}
 	return 0;
@@ -743,8 +675,7 @@ int cfg_has_section(Cfg *cfg, const char *section)
 void cfg_clean_section(Cfg *cfg, const char *section)
 {
 	CfgSection *sec=cfg_find_section(cfg,section);
-	if (sec!=NULL)
-	{
+	if(sec!=NULL)	{
 		cfg_remove_section(cfg,sec);
 	}
 	cfg->modified++;

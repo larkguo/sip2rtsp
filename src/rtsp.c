@@ -26,14 +26,14 @@
 * frees all memory associated with rtsp client information
 */
 void 
-free_rtsp_client (rtsp_client_t *client)
+free_rtsp_client(rtsp_client_t *client)
 {
 	rtsp_session_t *p = NULL;
 	
 	if( NULL == client)
 		return;
 	
-	/*if (rptr->thread != NULL) {
+	/*if(rptr->thread != NULL) {
 	rtsp_close_thread(rptr);
 	} else*/ {
 		rtsp_close_socket(client);
@@ -42,7 +42,7 @@ free_rtsp_client (rtsp_client_t *client)
 #endif
 	}
 
-	while (client->session_list != NULL) {
+	while(client->session_list != NULL) {
 		p = client->session_list;
 		client->session_list = client->session_list->next;
 		free_session_info(p);
@@ -56,19 +56,18 @@ free_rtsp_client (rtsp_client_t *client)
 	free_decode_response(client->decode_response);
 	client->decode_response = NULL;
 	CHECK_AND_FREE(client->authorization);
-		
 	free(client);
 }
 
 
 rtsp_client_t *
-rtsp_create_client_common (core *co,const char *url, int *perr)
+rtsp_create_client_common(core *co,const char *url, int *perr)
 {
 	int err;
 	rtsp_client_t *client;
 
 	client = malloc(sizeof(rtsp_client_t));
-	if (client == NULL) {
+	if(client == NULL) {
 		*perr = ENOMEM;
 		return (NULL);
 	}
@@ -78,21 +77,20 @@ rtsp_create_client_common (core *co,const char *url, int *perr)
 	client->orig_url = NULL;
 	client->server_name = NULL;
 	client->cookie = NULL;
-	client->recv_timeout = 2 * 1000;  /* default timeout is 2 seconds.*/
+	client->recv_timeout = 3 * 1000;  /* default timeout is 3 seconds.*/
 	client->server_socket = -1;
 	client->next_cseq = 1;
 	client->session = NULL;
 	client->m_offset_on = 0;
 	client->m_buffer_len = 0;
 	client->m_resp_buffer[RECV_BUFF_DEFAULT_LEN] = '\0';
+	client->need_reconnect = 0;
 	
 	client->authorization = NULL;
-	client->audio_dir = stream_sendrecv;
-	client->video_dir = stream_sendrecv;
 	client->session_timeout = 0;
 	client->co = co;
 	err = rtsp_dissect_url(client, url);
-	if (err != 0) {
+	if(err != 0) {
 		log(co,LOG_WARNING,"Couldn't decode url[%s] %d\n", url, err);
 		*perr = err;
 		free_rtsp_client(client);
@@ -103,7 +101,7 @@ rtsp_create_client_common (core *co,const char *url, int *perr)
 
 
 rtsp_client_t *
-rtsp_create_client (core *co,const char *url, int *err)
+rtsp_create_client(core *co,const char *url, int *err)
 {
 	rtsp_client_t *client = NULL;
 
@@ -114,8 +112,8 @@ rtsp_create_client (core *co,const char *url, int *err)
 
 	wVersionRequested = MAKEWORD( 2, 0 );
 
-	ret = WSAStartup( wVersionRequested, &wsaData );
-	if ( ret != 0 ) {
+	ret = WSAStartup(wVersionRequested, &wsaData );
+	if( ret != 0 ) {
 		/* Tell the user that we couldn't find a usable */
 		/* WinSock DLL.*/
 		*err = ret;
@@ -123,9 +121,9 @@ rtsp_create_client (core *co,const char *url, int *err)
 	}
 #endif
 	client = rtsp_create_client_common(co,url, err);
-	if (client == NULL) return (NULL);
+	if(client == NULL) return (NULL);
 	*err = rtsp_create_socket(client);
-	if (*err != 0) {
+	if(*err != 0) {
 		log(co,LOG_WARNING,"Couldn't connect %s\n",url);
 		free_rtsp_client(client);
 		return (NULL);
@@ -134,20 +132,19 @@ rtsp_create_client (core *co,const char *url, int *err)
 }
 
 
-
 int 
-rtsp_send_and_get (rtsp_client_t *client,
+rtsp_send_and_get(rtsp_client_t *client,
 					   char *buffer,
 					   uint32_t buflen)
 {
 	int ret;
 	log(client->co,LOG_NOTICE,"rtsp send -->\n%s\n", buffer);
 	ret = rtsp_send2(client, buffer, buflen);
-	if (ret < 0) {
+	if(ret < 0) {
 		return (RTSP_RESPONSE_RECV_ERROR);
 	}
-
+	
 	ret = rtsp_get_response(client);
-
 	return ret;
 }
+

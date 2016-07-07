@@ -430,7 +430,7 @@ int rtsp_recv (rtsp_client_t *client,
 		result = rtsp_receive_socket(client,
 			buffer + copied,
 			len,
-			0,
+			client->recv_timeout,
 			0);
 		if (result >= 0) {
 			copied += result;
@@ -457,7 +457,7 @@ static int rtsp_save_and_read (rtsp_client_t *client)
 	}
 
 	client->m_offset_on = 0;
-	ret = rtsp_read_into_buffer(client, client->m_buffer_len, 0);
+	ret = rtsp_read_into_buffer(client, client->m_buffer_len, 1);
 	if (ret > 0) {
 		last_on += ret;
 	}

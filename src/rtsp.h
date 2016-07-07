@@ -21,8 +21,8 @@
 /*
 * rtsp.h - API for generic RTSP client
 */
-#ifndef __RTSP_CLIENT_H__
-#define __RTSP_CLIENT_H__ 1
+#ifndef __RTSP_H__
+#define __RTSP_H__ 1
 
 #include <string.h>     /* for string manipulation                          */
 #include <stdio.h>
@@ -279,7 +279,7 @@ extern "C" {
 		rtsp_command_t *cmd,
 		rtsp_decode_t **decode_result);
 
-	int rtsp_send_aggregate_teardown (rtsp_client_t *client,
+	int rtsp_send_aggregate_teardown(rtsp_client_t *client,
 		const char *url,
 		rtsp_command_t *cmd,
 		rtsp_decode_t **decode_result);
@@ -290,12 +290,12 @@ extern "C" {
 
 	struct in_addr get_server_ip_address(rtsp_session_t *session);
 
-	int rtsp_send_set_parameter (rtsp_client_t *client,
+	int rtsp_send_set_parameter(rtsp_client_t *client,
 		const char *aggregate_url,
 		rtsp_command_t *cmd,
 		rtsp_decode_t **decode_result);
 
-	int rtsp_send_get_parameter (rtsp_client_t *client,
+	int rtsp_send_get_parameter(rtsp_client_t *client,
 		const char *aggregate_url,
 		rtsp_command_t *cmd,
 		rtsp_decode_t **decode_result);

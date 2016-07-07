@@ -1,11 +1,16 @@
 
 Features:
+
 ------------
 
-sip2rtsp has support for:
- * SIP UAS
- * RTSP client
- * RTP Proxy(audio and video)
- * symmetricRTP
- * ...
 
+ * SIP/IMS UAS
+ 
+ * RTSP client
+ 
+ * RTP Proxy(audio and video)
+ 
+ * symmetricRTP
+ 
+ * network bridge mode
+ * simultaneous Multi sip connections

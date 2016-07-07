@@ -11,13 +11,39 @@ About
 The sip2rtsp is a high-performance software gateway from sip/ims to rtsp. 
 The CAMERA can access to SIP/IMS network by this GW.
 The software also supports audio and video relaying.
-
+		
+				
 
 How it works
 ------------
  * SIP UAC(linphone,Bria... or SIP/IMS SERVER) --> SIP2RTSP --> CAMERA(support RTSP,such as HIKVISION)
  * SIP UAC -->  SIP2RTSP --> RTSP PROXY(such as live555ProxyServer) -->  CAMERA
  * SIP UAC -->  SIP2RTSP -->  RTSP MediaServer(such as live555MediaServer)  
+
+
+			network 1 	| 	network 2	
+				   	|
+	[SIP client1] -->		|
+	[SIP client2] --> 	   [ SIP2RTSP ]	--> [ RTSP/RTP stream] 
+	 ...				|
+	[SIP client5] -->		|
+					|
+
+
+Features
+------------
+
+
+ * SIP/IMS UAS
+ 
+ * RTSP client
+ 
+ * RTP Proxy(audio and video)
+ 
+ * symmetricRTP
+ 
+ * network bridge mode
+ * simultaneous Multi sip connections
 
 
 Need
@@ -27,6 +53,7 @@ Need
  * libeXosip2>=4.1.0
 
 
+
 Building
 ------------
    $> ./configure
@@ -34,13 +61,15 @@ Building
    $> make install
    
 
+
 Run
 ------------   
 
-   $>./src/sip2rtsp -f ./doc/s2r-sip.cfg
+   $>sip2rtsp -f ./doc/sip2rtsp.cfg
 
  You can add osip2/exosip2 lib path into LD_LIBRARY_PATH,
  such as: export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:/usr/local/lib
+
 
 
 Examples

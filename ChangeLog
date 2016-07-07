@@ -1,6 +1,17 @@
-sip2rtsp (1.0.0)
-	* SIP UAS
-	* RTSP client
-	* RTP Proxy(audio and video)
-	* symmetricRTP 
-	 
+
+
+sip2rtsp (1.1.0)
+	
+2016/7/7
+ * network bridge mode
+ * simultaneous Multi sip connections	
+
+
+sip2rtsp (1.0.0)	2016/7/3	
+ * SIP/IMS UAS
+ 	
+ * RTSP client
+	
+ * RTP Proxy(audio and video)
+	
+ * symmetricRTP  

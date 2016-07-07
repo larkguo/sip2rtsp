@@ -67,14 +67,14 @@ log_write(core *co, const char *file,int line,int level, const char *format, ...
 	if(level > co->log_level)
 		return;
 	buf = (char *)malloc(BUFF_SIZE*sizeof(char));
-	if( NULL == buf){
+	if(NULL == buf){
 		printf("malloc NULL\n");
 	}
 	
 	va_start(ap, format);
 
 	lg=snprintf(buf, BUFF_SIZE, fmt, log_strlevel(level),file,line);
-	if (lg < BUFF_SIZE){
+	if(lg < BUFF_SIZE){
 		lg+=vsnprintf(buf+lg, BUFF_SIZE-lg, format, ap);
 	}
 	buf[BUFF_SIZE-1]='\0';
@@ -88,8 +88,8 @@ log_init(core *co)
 {
 	co->log_fd = NULL;
 	
-	if (co->log_level > 0){
-		if (co->log_file != NULL){
+	if(co->log_level > 0){
+		if(co->log_file != NULL){
 			co->log_fd = fopen(co->log_file,"w+");
 		}
 	}
@@ -97,17 +97,17 @@ log_init(core *co)
 }
 	
 void *
-log_loop (void *arg)
+log_loop(void *arg)
 {
 	core *co= (core *)arg;
 	char *buf = NULL;
 	FILE *fd = stdout;
 	
-	if( NULL != co->log_fd){
+	if(NULL != co->log_fd){
 		fd = co->log_fd;
 	}
 	
-	for (;;) {
+	for(;;) {
 		buf = (char *)osip_fifo_get(co->log_queue);
 		if( NULL != buf){
 			fprintf(fd,"%s",buf);

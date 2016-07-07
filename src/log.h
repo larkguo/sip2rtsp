@@ -19,8 +19,8 @@
  */
  
 
-#ifndef __H__
-#define __H__
+#ifndef __LOG_H__
+#define __LOG_H__
 
 #include <stdarg.h>
 #include "core.h"
@@ -37,7 +37,7 @@
 void log_write(core *, const char *, int,int, const char *, ...);
 
 int log_init(core *co);
-void *log_loop (void *arg);
+void *log_loop(void *arg);
 
 #define	log(co, level, format, args...){	\
 	log_write(co,__FILE__,__LINE__, level, format, ## args); \
