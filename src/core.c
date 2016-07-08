@@ -277,7 +277,7 @@ core_exit(core *co)
 {
 	log(co,LOG_NOTICE,"program has terminated.\n");
 
-	if(co->log_fd != NULL && co->log_fd != stdout){
+	if(co->log_fd != NULL && co->log_fd != stderr){
 		fclose(co->log_fd);
 	}
 	

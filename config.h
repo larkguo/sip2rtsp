@@ -20,17 +20,17 @@
 #define HAVE_INTTYPES_H 1
 
 /* Define to 1 if you have the `eXosip2' library (-leXosip2). */
-#define HAVE_LIBEXOSIP2 1
+/* #undef HAVE_LIBEXOSIP2 */
 
 /* Define to 1 if you have the `osip2' library (-losip2). */
-#define HAVE_LIBOSIP2 1
+/* #undef HAVE_LIBOSIP2 */
 
 /* Define to 1 if you have the `osipparser2' library (-losipparser2). */
-#define HAVE_LIBOSIPPARSER2 1
+/* #undef HAVE_LIBOSIPPARSER2 */
 
 /* Define to 1 if your system has a GNU libc compatible `malloc' function, and
    to 0 otherwise. */
-#define HAVE_MALLOC 0
+#define HAVE_MALLOC 1
 
 /* Define to 1 if you have the `memmove' function. */
 #define HAVE_MEMMOVE 1
@@ -49,7 +49,7 @@
 
 /* Define to 1 if your system has a GNU libc compatible `realloc' function,
    and to 0 otherwise. */
-#define HAVE_REALLOC 0
+#define HAVE_REALLOC 1
 
 /* Define to 1 if you have the `select' function. */
 #define HAVE_SELECT 1
@@ -133,7 +133,7 @@
 #define PACKAGE_VERSION "1.0.0"
 
 /* Define to 1 if you have the ANSI C header files. */
-/* #undef STDC_HEADERS */
+#define STDC_HEADERS 1
 
 /* Version number of package */
 #define VERSION "1.0.0"
@@ -144,10 +144,10 @@
 /* #undef _UINT32_T */
 
 /* Define to rpl_malloc if the replacement function should be used. */
-#define malloc rpl_malloc
+/* #undef malloc */
 
 /* Define to rpl_realloc if the replacement function should be used. */
-#define realloc rpl_realloc
+/* #undef realloc */
 
 /* Define to `unsigned int' if <sys/types.h> does not define. */
 /* #undef size_t */

@@ -313,7 +313,7 @@ streams_rtsp_loop(core *co)
 	nready = select(maxfd+1, &readset, NULL, NULL, &tv);
 	if(nready <= 0)
 		return 0;
-
+	
 	/* rtsp */
 	for(i = 0; i < stream_max; i++) {
 		fd = co->rtsp.fds[i];
@@ -427,7 +427,7 @@ int streams_loop(core *co)
 			streams_sip_loop(co);
 		}
 	}else{
-		osip_usleep(20000);
+		osip_usleep(50000);
 	}
 	return 0;
 }

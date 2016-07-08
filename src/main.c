@@ -33,7 +33,7 @@ usage(void)
                 "\t-h -- help\n"
                 "\t-f -- config file\n"
                 "\n\texample:\n"
-                "\tsip2rtsp -f s2r.cfg\n\n");
+                "\tsip2rtsp -f sip2rtsp.cfg\n\n");
 }
 
 int 

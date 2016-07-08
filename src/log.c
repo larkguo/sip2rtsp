@@ -101,7 +101,7 @@ log_loop(void *arg)
 {
 	core *co= (core *)arg;
 	char *buf = NULL;
-	FILE *fd = stdout;
+	FILE *fd = stderr;
 	
 	if(NULL != co->log_fd){
 		fd = co->log_fd;
