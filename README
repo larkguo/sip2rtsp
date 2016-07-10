@@ -1,5 +1,5 @@
 
-Project    : sip2rtsp - sip/ims to rtsp gateway
+Project    : sip2rtsp - sip/ims protocol to rtsp protocol gateway
 Email      : larkguo@gmail.com
 License    : GPL 
 Home Page  : http://larkguo.googlepages.com
@@ -8,7 +8,7 @@ Home Page  : http://larkguo.googlepages.com
 About
 ------------
 
-The sip2rtsp is a high-performance software gateway from sip/ims to rtsp. 
+The sip2rtsp is a high-performance software gateway from sip/ims protocol to rtsp protocol. 
 The CAMERA can access to SIP/IMS network by this GW.
 The software also supports audio and video relaying.
 		
@@ -49,8 +49,8 @@ Features
 Need
 ------------
 
- * libosip2>=4.1.0
- * libeXosip2>=4.1.0
+ * libosip2>=4.1.0, download from http://ftp.gnu.org/gnu/osip/
+ * libeXosip2>=4.1.0,download fom http://download.savannah.gnu.org/releases/exosip/
 
 
 
