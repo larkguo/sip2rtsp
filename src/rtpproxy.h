@@ -54,7 +54,7 @@ int payload_init(core *co);
 int streams_init(core *co);
 int streams_loop(core *co);
 int streams_stop(core *co);
-
+int stream_call_stop(core *co, int callid);
 int sock_pair_create(core*co,int callid,stream_mode mode,b2b_side side);
 
 #ifdef __cplusplus

@@ -21,13 +21,13 @@ How it works
  * SIP UAC -->  SIP2RTSP -->  RTSP MediaServer(such as live555MediaServer)  
 
 
-			network 1 	| 	network 2	
-				   	|
-	[SIP client1] -->		|
-	[SIP client2] --> 	   [ SIP2RTSP ]	--> [ RTSP/RTP stream] 
-	 ...				|
-	[SIP client5] -->		|
-					|
+		network 1 	| 	network 2	
+			   	|
+  [SIP client1] -->		|
+  [SIP client2] --> 	 [ SIP2RTSP ]	--> [ RTSP/RTP stream] 
+	 ...			|
+  [SIP clientN] -->		|
+				|
 
 
 Features

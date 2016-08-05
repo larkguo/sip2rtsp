@@ -784,8 +784,19 @@ sip_init(core *co)
 {
 	int ret = OSIP_SUCCESS;
 	int try_maxnum = 3;
+
+	ret = core_sipclients_init(co);
+	if( 0 != ret ){
+		log(co,LOG_ERR, "core_sipclients_init failed,maxcalls %d too much?\n",
+			co->maxcalls);
+		return ret;
+	}
 	
 	excontext = eXosip_malloc();
+	if( NULL == excontext ){
+		log(co,LOG_ERR, "eXosip_malloc failed\n");
+		return -1;
+	}
 	
 try_bind:	
 	if(eXosip_init(excontext)) {

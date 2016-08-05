@@ -32,10 +32,10 @@
 
 #define _GNU_SOURCE
 #define PROG_NAME "sip2rtsp"
-#define PROG_VER  "1.1.0"
+#define PROG_VER  "1.1.1"
 #define UA_STRING  PROG_NAME " v" PROG_VER
 
-#define MAX_SIPCALL		(5)
+#define DEFAULT_MAX_SIPCALLS		(3)
 
 typedef enum{
 	stream_audio_rtp = 0,
@@ -118,14 +118,17 @@ typedef struct core_t {
 	char *authusername;
 	char *authpassword;
 	int expiry;
-
+	int maxcalls;
+	int when_callfull;
+	sipcall	*sipcall;
+	
 	/* rtsp */
 	char *rtsp_localip;
 	char *rtsp_url ;
 	char *rtsp_username;
 	char *rtsp_password;
 	int session_timeout;
-
+	
 	/* rtpproxy */
 	int symmetric_rtp;
 	int rtpproxy;
@@ -134,7 +137,7 @@ typedef struct core_t {
 	int rtp_current_port;
 	int	sipcallnum;
 	rtspserver rtsp;
-	sipcall	sipcall[MAX_SIPCALL];
+
 } core;
 
 
@@ -165,8 +168,7 @@ int core_rtp_current_port_set(core *co, int port);
 int core_init(core *co);
 int core_show(core *co);
 int core_exit(core *co);
-
-
+int core_sipclients_init(core *co);
 int core_sipcallnum_get(core *co);
 int core_sipcallnum_add(core *co);
 int core_sipcallnum_sub(core *co);

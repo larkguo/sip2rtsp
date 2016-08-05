@@ -97,11 +97,13 @@ main(int argc, char *argv[])
 	co.outboundproxy = cfg_get_string(co.cfg,"sip","outboundproxy", NULL);
 	co.authusername = cfg_get_string(co.cfg,"sip","authusername", NULL);
 	co.authpassword = cfg_get_string(co.cfg,"sip","authpassword", NULL);
+	co.maxcalls = cfg_get_int(co.cfg,"sip","maxcalls", DEFAULT_MAX_SIPCALLS);
+	co.when_callfull = cfg_get_int(co.cfg,"sip","when_callfull", 0);
 	co.rtsp_localip = cfg_get_string(co.cfg,"rtsp","localip", "0.0.0.0");
 	co.rtsp_url = cfg_get_string(co.cfg,"rtsp","url", NULL);
 	co.rtsp_username = cfg_get_string(co.cfg,"rtsp","username", NULL);
 	co.rtsp_password = cfg_get_string(co.cfg,"rtsp","password", NULL);
-	co.session_timeout = cfg_get_int(co.cfg,"sip","session_timeout", 60);
+	co.session_timeout = cfg_get_int(co.cfg,"rtsp","session_timeout", 60);
 	co.rtpproxy = cfg_get_int(co.cfg,"rtp","proxy", 1);
 	co.rtp_start_port = cfg_get_int(co.cfg,"rtp","start_port", 9000);
 	co.rtp_end_port = cfg_get_int(co.cfg,"rtp","end_port", 9100);
@@ -139,6 +141,8 @@ main(int argc, char *argv[])
 		"sip_localport=%d\n"
 		"authusername=%s\n"
 		"authpassword=%s\n"
+		"maxcalls=%d\n"
+		"when_callfull=%d\n"
 		"rtsp_localip=%s\n"
 		"rtsp_url=%s\n"
 		"rtsp_username=%s\n"
@@ -161,6 +165,8 @@ main(int argc, char *argv[])
 		co.sip_localport,
 		co.authusername,
 		co.authpassword,
+		co.maxcalls,
+		co.when_callfull,
 		co.rtsp_localip,
 		co.rtsp_url,
 		co.rtsp_username,

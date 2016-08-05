@@ -35,7 +35,7 @@ payload_init(core *co)
 		memset(&co->rtsp.payload[i],0,sizeof(co->rtsp.payload[i]));
 		co->rtsp.payload[i].media_format = -1;
 
-		for(j = 0; j< MAX_SIPCALL; j++) {
+		for(j = 0; j< co->maxcalls; j++) {
 			memset(&co->sipcall[j].payload[i],0,sizeof(co->rtsp.payload[i]));
 			co->sipcall[j].payload[i].media_format = -1;
 		}
@@ -145,7 +145,7 @@ sock_create(core *co,int callid,stream_mode mode, b2b_side side)
 		sock_noblocking_set(co->rtsp.fds[mode]);
 	}else{
 		int j = -1;
-		for(j = 0; j < MAX_SIPCALL; j++) {
+		for(j = 0; j < co->maxcalls; j++) {
 			if(co->sipcall[j].callid == callid){
 				memset(&co->sipcall[j].remote[mode],0,sizeof(co->sipcall[j].remote[mode]));
 				co->sipcall[j].local[mode].sin_family      = AF_INET;
@@ -208,7 +208,7 @@ try_nextport:
 		core_rtp_current_port_set(co,current_port);
 	}else{ /* sip */
 		int j = -1;
-		for(j = 0; j < MAX_SIPCALL; j++) {
+		for(j = 0; j < co->maxcalls; j++) {
 			if(co->sipcall[j].callid == callid){
 				if(co->sipcall[j].fds[mode] > 0)  return 0;
 				
@@ -228,10 +228,8 @@ try_nextport:
 			}
 		}
 	}
-	
 	return 0;
 }
-
 
 int 
 streams_init(core *co)
@@ -255,6 +253,31 @@ streams_init(core *co)
 }
 
 int 
+stream_call_stop(core *co, int callid)
+{
+	int i, j ;
+	int fd;
+	int rtpproxy = core_rtpproxy_get(co);
+	
+	if(0 == rtpproxy)
+		return 0;
+		
+	for(j = 0; j < co->maxcalls; j++) {
+		if(co->sipcall[j].callid == callid) {
+			for(i = 0; i < stream_max; i++) {
+				fd = co->sipcall[j].fds[i];
+				if(fd >= 0) {
+					close(fd);
+					co->sipcall[j].fds[i] = -1;
+				}
+			}
+		}
+	}
+	
+	return 0;
+}
+
+int 
 streams_stop(core *co)
 {
 	int i, j ;
@@ -271,7 +294,7 @@ streams_stop(core *co)
 			co->rtsp.fds[i] = -1;
 		}
 		
-		for(j = 0; j < MAX_SIPCALL; j++) {
+		for(j = 0; j < co->maxcalls; j++) {
 			fd = co->sipcall[j].fds[i];
 			if(fd >= 0) {
 				close(fd);
@@ -347,10 +370,20 @@ streams_rtsp_loop(core *co)
 				goto sendtosip;
 			}
 sendtosip: 
-			for(j = 0; j < MAX_SIPCALL; j++) {
-				if(co->sipcall[j].callid <= 0)	continue;
-				stream_dir  dir = core_sipcall_dir_get(co,co->sipcall[j].callid,i);
-				if(stream_inactive == dir || stream_sendonly == dir)		continue;
+			for(j = 0; j < co->maxcalls; j++) {
+				stream_dir  dir ;
+				
+				if(co->sipcall[j].callid <= 0)	{
+					continue;
+				}
+				if(co->sipcall[j].fds[i]<= 0)	{
+					continue;
+				}
+				
+				dir = core_sipcall_dir_get(co,co->sipcall[j].callid,i);
+				if(stream_inactive == dir || stream_sendonly == dir)	{
+					continue;
+				}
 				
 				/* payload_type map */
 				if(co->sipcall[j].payload[i].media_format >= 0 ){
@@ -388,7 +421,7 @@ streams_sip_loop(core *co)
 	FD_ZERO(&readset);
 
 	for(i = 0; i < stream_max; i++) {
-		for(j = 0; j < MAX_SIPCALL; j++) {
+		for(j = 0; j < co->maxcalls; j++) {
 			fd = co->sipcall[j].fds[i];
 			if(fd > 0){
 				FD_SET(fd, &readset);
@@ -402,7 +435,7 @@ streams_sip_loop(core *co)
 		return 0;
 
 	for(i = 0; i < stream_max; i++) {
-		for(j = 0; j < MAX_SIPCALL; j++) {
+		for(j = 0; j < co->maxcalls; j++) {
 			if(co->sipcall[j].callid > 0){
 				fd = co->sipcall[j].fds[i];
 				if(FD_ISSET(fd, &readset)) {

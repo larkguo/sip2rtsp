@@ -36,7 +36,7 @@ core_remote_addr_set(core *co,int callid,stream_mode mode,b2b_side side,
 
 	if(side_sip == side){ /* sip */
 		int i = -1;
-		for(i = 0; i < MAX_SIPCALL; i++) {
+		for(i = 0; i < co->maxcalls; i++) {
 			if(callid == co->sipcall[i].callid ){
 				if(NULL != host){
 					co->sipcall[i].remote[mode].sin_addr.s_addr = inet_addr(host);
@@ -73,7 +73,7 @@ core_remote_addr_get(core *co,int callid,stream_mode mode,b2b_side side,
 
 	if(side_sip == side){ /* sip */
 		int i = -1;
-		for(i = 0; i < MAX_SIPCALL; i++) {
+		for(i = 0; i < co->maxcalls; i++) {
 			if(callid == co->sipcall[i].callid ){
 				tmp_host = inet_ntoa(co->sipcall[i].remote[mode].sin_addr);
 				tmp_port = ntohs(co->sipcall[i].remote[mode].sin_port);
@@ -109,7 +109,7 @@ core_payload_set(core *co,int callid,stream_mode mode,b2b_side side,
 
 	if(side_sip == side){ /* sip */
 		int i = -1;
-		for(i = 0; i < MAX_SIPCALL; i++) {
+		for(i = 0; i < co->maxcalls; i++) {
 			if(callid == co->sipcall[i].callid){
 				if(NULL != mime_type){
 					strncpy(co->sipcall[i].payload[mode].mime_type,mime_type,
@@ -149,7 +149,7 @@ core_payload_get(core *co,int callid,stream_mode mode,b2b_side side,
 
 	if(side_sip == side){ /* sip */
 		int i = -1;
-		for(i = 0; i < MAX_SIPCALL; i++) {
+		for(i = 0; i < co->maxcalls; i++) {
 			if(callid == co->sipcall[i].callid ){
 				if(NULL != mime_type && mime_type_len > 0){
 					strncpy(mime_type,co->sipcall[i].payload[mode].mime_type,mime_type_len);
@@ -186,7 +186,7 @@ core_local_addr_get(core *co,int callid,stream_mode mode, b2b_side side,
 	}
 	if(side_sip == side){ /* sip */
 		int i = -1;
-		for(i = 0; i < MAX_SIPCALL; i++) {
+		for(i = 0; i < co->maxcalls; i++) {
 			if( callid == co->sipcall[i].callid ){
 				tmp_host = inet_ntoa(co->sipcall[i].local[mode].sin_addr);
 				tmp_port = ntohs(co->sipcall[i].local[mode].sin_port);
@@ -244,9 +244,26 @@ core_rtp_current_port_set(core *co, int port)
 }
 
 int 
-core_init(core *co)
+core_sipclients_init(core *co)
 {
 	int i;
+	if(co->maxcalls <= 0 ){
+		co->maxcalls = DEFAULT_MAX_SIPCALLS;
+	}
+	co->sipcall = (sipcall *)osip_malloc(sizeof(sipcall) * (co->maxcalls));
+	if( NULL == co->sipcall) {
+		return -1;
+	}
+	for(i = 0; i < co->maxcalls; i++) {
+		memset(&co->sipcall[i],0,sizeof(sipcall));
+		co->sipcall[i].callid = -1;
+	}
+	return 0;
+}
+
+int 
+core_init(core *co)
+{
 	memset(co,0, sizeof(core));
 	co->rtpproxy = 1;
 	co->rtp_start_port = 9000;
@@ -257,12 +274,6 @@ core_init(core *co)
 	co->session_timeout = 60;
 	co->log_level = LOG_ERR;
 
-	for(i = 0; i < MAX_SIPCALL; i++) {
-		co->sipcall[i].callid = -1;
-		co->sipcall[i].audio_dir = stream_sendrecv;
-		co->sipcall[i].video_dir = stream_sendrecv;
-	}
-	
 	co->log_queue = (osip_fifo_t *)osip_malloc(sizeof(osip_fifo_t));
 	if(co->log_queue == NULL){
 		return -1;
@@ -283,6 +294,7 @@ core_exit(core *co)
 	
 	cfg_destroy(co->cfg);
 	osip_fifo_free(co->log_queue);
+	osip_free(co->sipcall);
 	return 0;
 }
 
@@ -298,7 +310,7 @@ core_show(core *co)
 	stream_dir dir = stream_sendrecv;
 	char dir_str[32]={0};
 
-	for(i = 0; i < MAX_SIPCALL; i++) {
+	for(i = 0; i < co->maxcalls; i++) {
 		if(-1 == co->sipcall[i].callid) 	continue;
 
 		/* audio */
@@ -400,8 +412,11 @@ int
 core_sipcall_release(core *co,int callid)
 {
 	int i = -1;
-	for(i = 0; i < MAX_SIPCALL; i++) {
+	stream_call_stop(co, callid);
+	
+	for(i = 0; i < co->maxcalls; i++) {
 		if(callid == co->sipcall[i].callid){
+			memset(&co->sipcall[i],0,sizeof(sipcall));
 			co->sipcall[i].callid = -1;
 			core_sipcallnum_sub(co);
 		}
@@ -418,47 +433,66 @@ core_sipcall_set(core *co,struct eXosip_t *context,eXosip_event_t *je)
 	int  oldest_index = -1;
 	int callid = je->cid;
 	int dialogid = je->did;
+	int when_callfull = co->when_callfull;
 	
 	/* find */
-	for(i = 0; i < MAX_SIPCALL; i++) {
+	for(i = 0; i < co->maxcalls; i++) {
 		if(callid == co->sipcall[i].callid){
 			return 0;
 		}
 	}
 
-	/* new set */
-	for(i = 0; i < MAX_SIPCALL; i++) {
-		if( -1 == co->sipcall[i].callid){
-			co->sipcall[i].callid = callid;
-			co->sipcall[i].dialogid = dialogid;
-			core_sipcallnum_add(co);
-			return 0;
-		}else{
-			if(oldest_callid > co->sipcall[i].callid || -1 == oldest_callid){
-				oldest_callid = co->sipcall[i].callid;
-				oldest_dialogid = co->sipcall[i].dialogid;
-				oldest_index = i;
+	if( !when_callfull ) {
+		
+		/* new set */
+		for(i = 0; i < co->maxcalls; i++) {
+			if( -1 == co->sipcall[i].callid){
+				co->sipcall[i].callid = callid;
+				co->sipcall[i].dialogid = dialogid;
+				core_sipcallnum_add(co);
+				return 0;
 			}
+		}
+		
+		log(co,LOG_NOTICE,"maxcalls %d:%d full!\n",co->maxcalls,core_sipcallnum_get(co));
+		return -1;
+		
+	}else{ //when_callfull
+	
+		/* new set */
+		for(i = 0; i < co->maxcalls; i++) {
+			if( -1 == co->sipcall[i].callid){
+				co->sipcall[i].callid = callid;
+				co->sipcall[i].dialogid = dialogid;
+				core_sipcallnum_add(co);
+				return 0;
+			}else{
+				if(oldest_callid > co->sipcall[i].callid || -1 == oldest_callid){
+					oldest_callid = co->sipcall[i].callid;
+					oldest_dialogid = co->sipcall[i].dialogid;
+					oldest_index = i;
+				}
+			}
+		}
+		
+		/* no space,replace oldest */
+		if(oldest_index >= 0 && oldest_index < co->maxcalls){
+			int ret = -1;
+			eXosip_lock(context);
+			ret = eXosip_call_terminate(context,oldest_callid,oldest_dialogid);
+			eXosip_unlock(context);
+			log(co,LOG_DEBUG,"eXosip_call_terminate call(%d-%d:%d)=%d\n",
+				oldest_index,oldest_callid,oldest_dialogid,ret);
+			
+			co->sipcall[oldest_index].callid = callid;
+			co->sipcall[oldest_index].dialogid = dialogid;
+			log(co,LOG_NOTICE,"maxcalls %d full,replace oldest call(%d-%d:%d) to call(%d-%d:%d)\n",
+				co->maxcalls,oldest_index,oldest_callid,oldest_dialogid,oldest_index,callid,dialogid);
+			
+			return 0;
 		}
 	}
 
-	/* no space,replace oldest */
-	if(oldest_index >= 0 && oldest_index < MAX_SIPCALL){
-		int ret = -1;
-		eXosip_lock(context);
-		ret = eXosip_call_terminate(context,oldest_callid,oldest_dialogid);
-		eXosip_unlock(context);
-		log(co,LOG_DEBUG,"eXosip_call_terminate call(%d-%d:%d)=%d\n",
-			oldest_index,oldest_callid,oldest_dialogid,ret);
-		
-		co->sipcall[oldest_index].callid = callid;
-		co->sipcall[oldest_index].dialogid = dialogid;
-		log(co,LOG_INFO,"maxcalls %d full,replace oldest call(%d-%d:%d) to call(%d-%d:%d)\n",
-			MAX_SIPCALL,oldest_index,oldest_callid,oldest_dialogid,oldest_index,callid,dialogid);
-		
-		return 0;
-	}
-	
 	return -1;
 }
 
@@ -467,7 +501,7 @@ core_audiodir_set(core *co,int callid,stream_dir dir)
 {
 	int i = -1;
 
-	for(i = 0; i < MAX_SIPCALL; i++) {
+	for(i = 0; i < co->maxcalls; i++) {
 		if(callid == co->sipcall[i].callid){
 			co->sipcall[i].audio_dir = dir;
 		}
@@ -481,7 +515,7 @@ core_videodir_set(core *co,int callid,stream_dir dir)
 {
 	int i = -1;
 
-	for(i = 0; i < MAX_SIPCALL; i++) {
+	for(i = 0; i < co->maxcalls; i++) {
 		if(callid == co->sipcall[i].callid){
 			co->sipcall[i].video_dir = dir;
 		}
@@ -494,7 +528,7 @@ core_sipcall_dir_get(core *co,int callid,stream_mode mode)
 {
 	int i = -1;
 
-	for(i = 0; i < MAX_SIPCALL; i++) {
+	for(i = 0; i < co->maxcalls; i++) {
 		if(callid == co->sipcall[i].callid){
 			if(stream_audio_rtp == mode || stream_audio_rtcp == mode) {	
 				return co->sipcall[i].audio_dir;
@@ -506,3 +540,4 @@ core_sipcall_dir_get(core *co,int callid,stream_mode mode)
 	}
 	return stream_sendrecv;
 }
+
