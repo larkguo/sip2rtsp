@@ -1,14 +1,14 @@
 
-Project    : sip2rtsp - sip/ims protocol to rtsp protocol gateway
-Email      : larkguo@gmail.com
-License    : GPL 
-Home Page  : http://larkguo.googlepages.com
+Project	: sip2rtsp - sip/ims protocol to rtsp protocol gateway written in C language
+Email		: larkguo@gmail.com
+License	: GPL 
+Home Page	: http://larkguo.googlepages.com
 
 
 About
 ------------
 
-The sip2rtsp is a high-performance software gateway from sip/ims protocol to rtsp protocol. 
+The sip2rtsp is a high-performance software gateway from sip/ims protocol(RFC 3261) to rtsp protocol(RFC 2326). 
 The CAMERA can access to SIP/IMS network by this GW.
 The software also supports audio and video relaying.
 		
@@ -16,18 +16,15 @@ The software also supports audio and video relaying.
 
 How it works
 ------------
- * SIP UAC(linphone,Bria... or SIP/IMS SERVER) --> SIP2RTSP --> CAMERA(support RTSP,such as HIKVISION)
- * SIP UAC -->  SIP2RTSP --> RTSP PROXY(such as live555ProxyServer) -->  CAMERA
- * SIP UAC -->  SIP2RTSP -->  RTSP MediaServer(such as live555MediaServer)  
+ * SIP UAC(linphone,Bria...or SIP/IMS SERVER)--> SIP2RTSP--> CAMERA(support RTSP,such as HIKVISION)
+ * SIP UAC--> SIP2RTSP--> RTSP PROXY(such as live555ProxyServer)-->  CAMERA
+ * SIP UAC--> SIP2RTSP--> RTSP MediaServer(such as live555MediaServer)  
 
 
-		network 1 	| 	network 2	
-			   	|
-  [SIP client1] -->		|
-  [SIP client2] --> 	 [ SIP2RTSP ]	--> [ RTSP/RTP stream] 
-	 ...			|
-  [SIP clientN] -->		|
-				|
+  [SIP client1]-->		
+  [SIP client2]--> [(network1) SIP2RTSP (network2)] -->[RTSP/RTP stream] 
+	 ...			
+  [SIP clientN]-->		
 
 
 Features
@@ -75,7 +72,7 @@ Run
 Examples
 ------------
   config: 	doc/*.cfg
-  log:		doc/*.log
+  log:	doc/*.log
   capture:	doc/*.pcap
 
 
